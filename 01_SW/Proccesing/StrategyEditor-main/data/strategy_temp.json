@@ -1,48 +1,33 @@
 {"strategy": [
   {
     "x_mm": 375,
-    "customAngle": 0,
-    "orientation": "CUSTOM",
-    "compass": "A",
-    "useAlign": false,
+    "angleDeg": 88.75585174560547,
     "id": 0,
     "poi": "startYellow",
     "y_mm": 225
   },
   {
-    "x_mm": 422,
-    "customAngle": 0,
-    "orientation": "CUSTOM",
-    "compass": "A",
-    "useAlign": false,
+    "x_mm": 423,
+    "angleDeg": 181.35704040527344,
     "id": 1,
-    "y_mm": 780
+    "y_mm": 716
   },
   {
-    "x_mm": 890,
-    "customAngle": 0,
-    "orientation": "CUSTOM",
-    "compass": "A",
-    "useAlign": false,
+    "x_mm": 829,
+    "angleDeg": 280.86517333984375,
     "id": 2,
-    "y_mm": 925
+    "y_mm": 852
   },
   {
-    "x_mm": 1196,
-    "customAngle": 0,
-    "orientation": "CUSTOM",
-    "compass": "A",
-    "useAlign": false,
+    "x_mm": 1231,
+    "angleDeg": 140.67886352539062,
     "id": 3,
-    "y_mm": 915
+    "y_mm": 773
   },
   {
-    "x_mm": 1734,
-    "customAngle": 0,
-    "orientation": "CUSTOM",
-    "compass": "A",
-    "useAlign": false,
+    "x_mm": 1237,
+    "angleDeg": 331.6494445800781,
     "id": 4,
-    "y_mm": 890
+    "y_mm": 969
   }
 ]}

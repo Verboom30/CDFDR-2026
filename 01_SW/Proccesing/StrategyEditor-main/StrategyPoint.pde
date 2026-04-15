@@ -1,63 +1,127 @@
 class StrategyPoint {
+
   int id;
-  float x_mm, y_mm;
+  float x_mm;
+  float y_mm;
+
   String poiName = null;
 
-  boolean useAlign = false;
-  String compass = "";
-  String orientation = "";
-  int customAngle = 0;
+  // angle final sur ce point
+  float angleDeg = 0;
 
   StrategyPoint(int id, float x_mm, float y_mm) {
     this.id = id;
     this.x_mm = x_mm;
     this.y_mm = y_mm;
-
-    this.useAlign = false;
-    this.compass = "A";
-    this.orientation = "CUSTOM";
-    this.customAngle = 0;
+    this.angleDeg = 0;
   }
 
+  // =====================================
+  // DRAW
+  // =====================================
+
   void draw(PGraphics pg, float scale) {
+
     float px = x_mm;
     float py = y_mm;
 
+    // point sélectionné
     if (this == selectedPoint) {
       pg.stroke(255, 0, 0);
       pg.strokeWeight(3.0 / mmToPx);
-      pg.fill(255, 200, 200);
+      pg.fill(255, 180, 180);
     } else {
-      pg.fill(255, 0, 0);
       pg.stroke(0);
       pg.strokeWeight(1.0 / mmToPx);
+      pg.fill(255, 0, 0);
     }
 
     pg.ellipse(px, py, 18.0 / mmToPx, 18.0 / mmToPx);
+
+    drawLabel(pg, px, py);
+    drawAngleArrow(pg, px, py);
+  }
+
+
+  // =====================================
+  // LABEL
+  // =====================================
+
+  void drawLabel(PGraphics pg, float px, float py) {
 
     pg.textFont(font);
     pg.textAlign(CENTER, CENTER);
     pg.textSize(22.0 / mmToPx);
 
-    String label = "P" + id;
+    String txt = "P" + id;
+
     float tx = px;
     float ty = py - 16.0 / mmToPx;
 
     // contour noir
     pg.fill(0);
-    pg.text(label, tx - 1.0 / mmToPx, ty);
-    pg.text(label, tx + 1.0 / mmToPx, ty);
-    pg.text(label, tx, ty - 1.0 / mmToPx);
-    pg.text(label, tx, ty + 1.0 / mmToPx);
+    pg.text(txt, tx - 1.0 / mmToPx, ty);
+    pg.text(txt, tx + 1.0 / mmToPx, ty);
+    pg.text(txt, tx, ty - 1.0 / mmToPx);
+    pg.text(txt, tx, ty + 1.0 / mmToPx);
 
     // violet
     pg.fill(180, 0, 255);
-    pg.text(label, tx, ty);
+    pg.text(txt, tx, ty);
   }
 
+
+  // =====================================
+  // FLECHE ANGLE
+  // =====================================
+
+  void drawAngleArrow(PGraphics pg, float px, float py) {
+
+    float a = radians(angleDeg);
+
+    float len = 40.0 / mmToPx;
+
+    float x2 = px + cos(a) * len;
+    float y2 = py + sin(a) * len;
+
+    // si sélectionné -> cyan
+    if (this == selectedPoint) {
+      pg.stroke(0, 255, 255);
+      pg.fill(0, 255, 255);
+    } else {
+      pg.stroke(255, 255, 0);
+      pg.fill(255, 255, 0);
+    }
+
+    pg.strokeWeight(2.5 / mmToPx);
+
+    pg.line(px, py, x2, y2);
+
+    pg.pushMatrix();
+    pg.translate(x2, y2);
+    pg.rotate(a);
+
+    pg.noStroke();
+
+    pg.triangle(
+      0, 0,
+      -10.0 / mmToPx, -4.0 / mmToPx,
+      -10.0 / mmToPx, 4.0 / mmToPx
+    );
+
+    pg.popMatrix();
+  }
+
+
+  // =====================================
+  // HOVER
+  // =====================================
+
   boolean isHovered(float mouseX, float mouseY, float scale) {
+
     float px = x_mm * scale;
     float py = y_mm * scale;
-    return dist(mouseX, mouseY, px, py) < 10;
+
+    return dist(mouseX, mouseY, px, py) < 12;
   }
 }

@@ -5,7 +5,7 @@ PImage terrainImage;
 int nextPointId = 0;
 public static ArrayList<StrategyPoint> points = new ArrayList<StrategyPoint>();
 
-public static float mmToPx = 1;
+public static float mmToPx = 0.8;
 
 final int TERRAIN_W_MM = 3000;
 final int TERRAIN_H_MM = 2000;
@@ -56,6 +56,15 @@ void setup() {
   debugPrintPOIs();
 }
 
+void draw() {
+  background(220);
+  drawTerrain();
+
+  if (isSimulating) updateSimulation();
+
+  drawMouseCoordinates();
+}
+
 float screenToMmX(float xScreen) {
   return (xScreen - viewOffsetX) / mmToPx;
 }
@@ -72,15 +81,6 @@ float mmToScreenY(float yMm) {
   return yMm * mmToPx + viewOffsetY;
 }
 
-void draw() {
-  background(220);
-  drawTerrain();
-
-  if (isSimulating) updateSimulation();
-
-  drawMouseCoordinates();
-}
-
 void drawTerrain() {
   terrainView.beginDraw();
   terrainView.background(255);
@@ -95,12 +95,11 @@ void drawTerrain() {
     terrainView.fill(0);
     terrainView.text("Image 'terrain.png' introuvable", 20, 20);
   }
-  
-  //CONTOUR ROUGE DE LA TABLE
+
   terrainView.noFill();
   terrainView.stroke(255, 0, 0);
-  terrainView.strokeWeight(6.0 / mmToPx);
-  terrainView.rect(0, 0, TERRAIN_W_MM, TERRAIN_H_MM, 20);
+  terrainView.strokeWeight(4.0 / mmToPx);
+  terrainView.rect(0, 0, TERRAIN_W_MM, TERRAIN_H_MM);
 
   drawRobot(terrainView, 1.0);
   drawPOIs();
@@ -128,110 +127,10 @@ void drawPoints() {
   }
 }
 
-
-void mousePressed() {
-  if (mouseButton == CENTER) {
-    isPanning = true;
-    lastMouseX = mouseX;
-    lastMouseY = mouseY;
-    return;
+void drawPOIs() {
+  for (POI p : pois) {
+    p.draw(terrainView, 1.0);
   }
-
-  StrategyPoint clicked = getPointUnderMouse();
-
-  if (mouseButton == LEFT) {
-    if (clicked != null) {
-      selectedPoint = clicked;
-      isDragging = true;
-      println("Point sélectionné : P" + clicked.id);
-      if (gui != null) gui.setSelectedPoint(selectedPoint);
-    } else if (gui == null || gui.isAddPointEnabled()) {
-      int insertIndex = getSegmentIndexUnderMouse();
-
-      float x_mm = round(screenToMmX(mouseX));
-      float y_mm = round(screenToMmY(mouseY));
-
-      POI snap = getNearbyPOI(x_mm, y_mm, 50);
-      if (snap != null) {
-        x_mm = snap.x;
-        y_mm = snap.y;
-      }
-
-      StrategyPoint newPoint = new StrategyPoint(nextPointId++, x_mm, y_mm);
-      if (snap != null) {
-        newPoint.poiName = snap.name;
-      }
-
-      if (insertIndex != -1) {
-        points.add(insertIndex + 1, newPoint);
-        renumerotePoints();
-        println("Point inséré entre P" + insertIndex + " et P" + (insertIndex + 1));
-      } else {
-        points.add(newPoint);
-      }
-    }
-  }
-
-  if (mouseButton == RIGHT && clicked != null) {
-    points.remove(clicked);
-    renumerotePoints();
-    println("Point supprimé !");
-  }
-}
-
-void mouseDragged() {
-  if (isPanning) {
-    viewOffsetX += mouseX - lastMouseX;
-    viewOffsetY += mouseY - lastMouseY;
-    lastMouseX = mouseX;
-    lastMouseY = mouseY;
-    return;
-  }
-
-  if (isDragging && selectedPoint != null) {
-    float x_mm = round(constrain(screenToMmX(mouseX), 0, TERRAIN_W_MM));
-    float y_mm = round(constrain(screenToMmY(mouseY), 0, TERRAIN_H_MM));
-
-    POI snap = getNearbyPOI(x_mm, y_mm, 50);
-    if (snap != null) {
-      x_mm = snap.x;
-      y_mm = snap.y;
-      selectedPoint.poiName = snap.name;
-    } else {
-      selectedPoint.poiName = null;
-    }
-
-    selectedPoint.x_mm = x_mm;
-    selectedPoint.y_mm = y_mm;
-
-    if (gui != null) {
-      gui.setSelectedPoint(selectedPoint);
-    }
-  }
-}
-
-void mouseReleased() {
-  isDragging = false;
-  isPanning = false;
-}
-
-
-
-void renumerotePoints() {
-  nextPointId = 0;
-  for (StrategyPoint p : points) {
-    p.id = nextPointId++;
-  }
-}
-
-
-StrategyPoint getPointUnderMouse() {
-  for (StrategyPoint p : points) {
-    if (p.isHovered(mouseX - viewOffsetX, mouseY - viewOffsetY, mmToPx)) {
-      return p;
-    }
-  }
-  return null;
 }
 
 void drawPath() {
@@ -273,6 +172,115 @@ void drawArrow(PGraphics pg, float x1, float y1, float x2, float y2) {
   pg.popMatrix();
 }
 
+void mousePressed() {
+  if (mouseButton == CENTER) {
+    isPanning = true;
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
+    return;
+  }
+
+  StrategyPoint clicked = getPointUnderMouse();
+
+  // ====================================
+  // MODE ORIENTATION : SHIFT + clic sur point
+  // => sélection uniquement, jamais création
+  // ====================================
+  if (keyPressed && keyCode == SHIFT) {
+    if (clicked != null) {
+      selectedPoint = clicked;
+      if (gui != null) gui.setSelectedPoint(selectedPoint);
+    }
+    return;
+  }
+
+  if (mouseButton == LEFT) {
+    if (clicked != null) {
+      selectedPoint = clicked;
+      isDragging = true;
+      println("Point sélectionné : P" + clicked.id);
+      if (gui != null) gui.setSelectedPoint(selectedPoint);
+    } else if (gui == null || gui.isAddPointEnabled()) {
+      int insertIndex = getSegmentIndexUnderMouse();
+
+      float x_mm = round(screenToMmX(mouseX));
+      float y_mm = round(screenToMmY(mouseY));
+
+      POI snap = getNearbyPOI(x_mm, y_mm, 50);
+      if (snap != null) {
+        x_mm = snap.x;
+        y_mm = snap.y;
+      }
+
+      StrategyPoint newPoint = new StrategyPoint(nextPointId++, x_mm, y_mm);
+      if (snap != null) newPoint.poiName = snap.name;
+
+      if (insertIndex != -1) {
+        points.add(insertIndex + 1, newPoint);
+        renumerotePoints();
+        println("Point inséré entre P" + insertIndex + " et P" + (insertIndex + 1));
+      } else {
+        points.add(newPoint);
+      }
+    }
+  }
+
+  if (mouseButton == RIGHT && clicked != null) {
+    points.remove(clicked);
+    renumerotePoints();
+    println("Point supprimé !");
+  }
+}
+
+void mouseDragged() {
+  if (isPanning) {
+    viewOffsetX += mouseX - lastMouseX;
+    viewOffsetY += mouseY - lastMouseY;
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
+    return;
+  }
+
+  if (selectedPoint != null && keyPressed && keyCode == SHIFT) {
+    float px = mmToScreenX(selectedPoint.x_mm);
+    float py = mmToScreenY(selectedPoint.y_mm);
+
+    float a = atan2(mouseY - py, mouseX - px);
+    selectedPoint.angleDeg = degrees(a);
+
+    if (selectedPoint.angleDeg < 0) {
+      selectedPoint.angleDeg += 360;
+    }
+
+    if (gui != null) gui.setSelectedPoint(selectedPoint);
+    return;
+  }
+
+  if (isDragging && selectedPoint != null) {
+    float x_mm = round(constrain(screenToMmX(mouseX), 0, TERRAIN_W_MM));
+    float y_mm = round(constrain(screenToMmY(mouseY), 0, TERRAIN_H_MM));
+
+    POI snap = getNearbyPOI(x_mm, y_mm, 50);
+    if (snap != null) {
+      x_mm = snap.x;
+      y_mm = snap.y;
+      selectedPoint.poiName = snap.name;
+    } else {
+      selectedPoint.poiName = null;
+    }
+
+    selectedPoint.x_mm = x_mm;
+    selectedPoint.y_mm = y_mm;
+
+    if (gui != null) gui.setSelectedPoint(selectedPoint);
+  }
+}
+
+void mouseReleased() {
+  isDragging = false;
+  isPanning = false;
+}
+
 void mouseWheel(processing.event.MouseEvent event) {
   float e = event.getCount();
 
@@ -288,6 +296,21 @@ void mouseWheel(processing.event.MouseEvent event) {
   viewOffsetY = mouseY - worldY * mmToPx;
 }
 
+void renumerotePoints() {
+  nextPointId = 0;
+  for (StrategyPoint p : points) {
+    p.id = nextPointId++;
+  }
+}
+
+StrategyPoint getPointUnderMouse() {
+  for (StrategyPoint p : points) {
+    if (p.isHovered(mouseX - viewOffsetX, mouseY - viewOffsetY, mmToPx)) {
+      return p;
+    }
+  }
+  return null;
+}
 
 int getSegmentIndexUnderMouse() {
   float threshold = 10;
@@ -326,7 +349,6 @@ public String getDataPath(String filename) {
   return sketchPath("data/" + filename);
 }
 
-
 void loadPOIs(String filename) {
   String[] lines = loadStrings(filename);
   if (lines == null) {
@@ -344,10 +366,9 @@ void loadPOIs(String filename) {
       String name = parts[0].replace("const Vec2", "").trim();
       String coord = parts[1].trim();
 
-      // Extrait Vec2(x, y);
       coord = coord.replace("Vec2(", "")
         .replace(");", "")
-        .split("//")[0]  // enlève le commentaire éventuel
+        .split("//")[0]
         .trim();
 
       String[] coords = coord.split(",");
@@ -355,19 +376,12 @@ void loadPOIs(String filename) {
       if (coords.length == 2) {
         float x = float(trim(coords[0]));
         float y = float(trim(coords[1]));
-
         pois.add(new POI(name, x, y));
       }
     }
   }
 
   println("[POI] Loaded " + pois.size() + " POIs from " + filename);
-}
-
-void drawPOIs() {
-  for (POI p : pois) {
-    p.draw(terrainView, 1.0);
-  }
 }
 
 void debugPrintPOIs() {
@@ -393,10 +407,14 @@ void drawMouseCoordinates() {
   fill(255);
   stroke(0);
   strokeWeight(1);
-  rect(10, height - 70, 250, 20);
+  rect(10, height - 40, 250, 24);
 
   fill(0);
   textAlign(LEFT, CENTER);
   textFont(createFont("Arial", 12));
-  text("X: " + int(x_mm) + " mm   Y: " + int(y_mm) + " mm   Zoom: " + nf(mmToPx, 1, 2), 15, height - 60);
+  text(
+    "X: " + int(x_mm) + " mm   Y: " + int(y_mm) + " mm   Zoom: " + nf(mmToPx, 1, 2),
+    15,
+    height - 28
+  );
 }
