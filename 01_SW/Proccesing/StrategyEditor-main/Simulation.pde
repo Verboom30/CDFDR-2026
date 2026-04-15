@@ -132,7 +132,7 @@ void drawRobot(PGraphics pg, float scale) {
   pg.translate(px, py);
 
   // si png pointe vers le haut :
-  pg.rotate(robotAngle + HALF_PI);
+  pg.rotate(robotAngle - HALF_PI);
 
   pg.imageMode(CENTER);
 

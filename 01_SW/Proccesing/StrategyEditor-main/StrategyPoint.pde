@@ -115,7 +115,7 @@ void drawRobotPreview(PGraphics pg, float px, float py) {
   pg.translate(px, py);
 
   // même orientation que simulation
-  pg.rotate(a + HALF_PI);
+  pg.rotate(a - HALF_PI);
 
   pg.imageMode(CENTER);
 
