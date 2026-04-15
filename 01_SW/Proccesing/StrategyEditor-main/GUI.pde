@@ -82,12 +82,10 @@ public class StrategyEditorGUI extends PApplet {
 
     fieldAngle.getCaptionLabel().setColor(color(0, 102, 153));
 
-
     cp5.addTextlabel("helpAngle")
       .setText("SHIFT + drag sur point = orientation")
       .setPosition(20, 145)
       .setColorValue(color(0, 102, 153));
-
 
     // ----------------------------
     // Add point
@@ -100,7 +98,6 @@ public class StrategyEditorGUI extends PApplet {
       .setValue(true);
 
     toggleAddEnabled.getCaptionLabel().setColor(color(0, 102, 153));
-
 
     // ----------------------------
     // Navigation
@@ -116,6 +113,10 @@ public class StrategyEditorGUI extends PApplet {
       .setPosition(160, 240)
       .setSize(120, 30);
 
+    cp5.addButton("deleteSelectedPoint")
+      .setLabel("Delete selected")
+      .setPosition(20, 280)
+      .setSize(260, 30);
 
     // ----------------------------
     // Save / load
@@ -123,24 +124,23 @@ public class StrategyEditorGUI extends PApplet {
 
     cp5.addButton("saveStrategy")
       .setLabel("Save strategy")
-      .setPosition(20, 300)
+      .setPosition(20, 340)
       .setSize(120, 30);
 
     cp5.addButton("loadStrategy")
       .setLabel("Load strategy")
-      .setPosition(160, 300)
+      .setPosition(160, 340)
       .setSize(120, 30);
 
     cp5.addButton("resetStrategy")
       .setLabel("Reset strategy")
-      .setPosition(20, 350)
+      .setPosition(20, 390)
       .setSize(120, 30);
 
     cp5.addButton("reloadTempStrategy")
       .setLabel("Reload temp strategy")
-      .setPosition(20, 390)
+      .setPosition(20, 430)
       .setSize(260, 30);
-
 
     // ----------------------------
     // Simulation
@@ -148,12 +148,11 @@ public class StrategyEditorGUI extends PApplet {
 
     cp5.addButton("startSimulation")
       .setLabel("Start simulation")
-      .setPosition(20, 460)
+      .setPosition(20, 500)
       .setSize(120, 30);
 
-
     toggleShowOverlay = cp5.addToggle("showOverlay")
-      .setPosition(20, 520)
+      .setPosition(20, 560)
       .setSize(20, 20)
       .setValue(false)
       .setLabel("Show table overlay");
@@ -162,7 +161,6 @@ public class StrategyEditorGUI extends PApplet {
 
     reloadTempStrategy();
   }
-
 
   // ==========================================
   // DRAW
@@ -178,7 +176,6 @@ public class StrategyEditorGUI extends PApplet {
       println("[GUI] Auto-save");
     }
   }
-
 
   // ==========================================
   // LABEL INFO
@@ -196,7 +193,6 @@ public class StrategyEditorGUI extends PApplet {
       "\nAngle: " + nf(selected.angleDeg, 0, 1) + "°"
     );
   }
-
 
   // ==========================================
   // SET SELECTED
@@ -227,7 +223,6 @@ public class StrategyEditorGUI extends PApplet {
       fieldAngle.setText("");
     }
   }
-
 
   // ==========================================
   // EVENTS
@@ -270,7 +265,6 @@ public class StrategyEditorGUI extends PApplet {
 
     case "angleDeg":
       try {
-
         float a = Float.parseFloat(e.getStringValue());
 
         while (a < 0) a += 360;
@@ -286,7 +280,6 @@ public class StrategyEditorGUI extends PApplet {
     updateLabelInfo();
   }
 
-
   // ==========================================
   // HELPERS
   // ==========================================
@@ -298,7 +291,6 @@ public class StrategyEditorGUI extends PApplet {
   public void setMainApp(StrategyEditor app) {
     this.mainApp = app;
   }
-
 
   // ==========================================
   // SAVE / LOAD
@@ -333,7 +325,6 @@ public class StrategyEditorGUI extends PApplet {
     }
   }
 
-
   public JSONObject exportPointsToJSON() {
 
     JSONObject data = new JSONObject();
@@ -359,7 +350,6 @@ public class StrategyEditorGUI extends PApplet {
 
     return data;
   }
-
 
   public void loadStrategy() {
     selectInput("Select strategy...", "loadStrategyFromFile");
@@ -404,7 +394,6 @@ public class StrategyEditorGUI extends PApplet {
     mainApp.renumerotePoints();
   }
 
-
   // ==========================================
   // RESET
   // ==========================================
@@ -428,6 +417,28 @@ public class StrategyEditorGUI extends PApplet {
     }
   }
 
+  // ==========================================
+  // DELETE SELECTED
+  // ==========================================
+
+  public void deleteSelectedPoint() {
+
+    if (selected == null) {
+      println("[GUI] No selected point.");
+      return;
+    }
+
+    StrategyEditor.points.remove(selected);
+
+    mainApp.renumerotePoints();
+
+    selected = null;
+    StrategyEditor.selectedPoint = null;
+
+    setSelectedPoint(null);
+
+    println("[GUI] Selected point deleted.");
+  }
 
   // ==========================================
   // NAVIGATION
@@ -465,7 +476,6 @@ public class StrategyEditorGUI extends PApplet {
     StrategyEditor.selectedPoint = selected;
   }
 
-
   // ==========================================
   // SIMULATION
   // ==========================================
@@ -493,7 +503,6 @@ public class StrategyEditorGUI extends PApplet {
 
     println("[GUI] Simulation started.");
   }
-
 
   public void showOverlay(boolean val) {
     showOverlay = val;
