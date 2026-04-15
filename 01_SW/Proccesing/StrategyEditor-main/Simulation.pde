@@ -8,14 +8,14 @@ public static float robotWidth_mm = 287;
 public static float robotHeight_mm = 284;
 public static float robotHitbox_mm = 400;
 
-public static float robotSpeed_mm_per_sec = 600.0;
-public static float frameRateSim = 60.0;
+public static float robotSpeed_mm_per_sec = 1000.0;
+public static float frameRateSim = 50.0;
 
 // orientation robot en radians
 public static float robotAngle = 0.0;
 
 // vitesse de rotation
-public static float rotationSpeed = 0.10;
+public static float rotationSpeed = 0.2;
 
 // phase rotation sur point
 public static boolean rotatingAtPoint = false;
