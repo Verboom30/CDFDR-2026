@@ -1,0 +1,109 @@
+{"strategy": [
+  {
+    "x_mm": 1225,
+    "customAngle": 0,
+    "orientation": "CUSTOM",
+    "compass": "A",
+    "useAlign": false,
+    "id": 0,
+    "poi": "y2",
+    "y_mm": 1775
+  },
+  {
+    "x_mm": 1225,
+    "customAngle": 0,
+    "orientation": "CUSTOM",
+    "compass": "A",
+    "useAlign": false,
+    "id": 1,
+    "poi": "BannerYellow",
+    "y_mm": 1894
+  },
+  {
+    "x_mm": 1100,
+    "customAngle": 90,
+    "orientation": "NORTH",
+    "compass": "AB",
+    "useAlign": true,
+    "id": 2,
+    "y_mm": 1300
+  },
+  {
+    "x_mm": 1100,
+    "customAngle": 0,
+    "orientation": "SOUTH",
+    "compass": "BC",
+    "useAlign": false,
+    "id": 3,
+    "poi": "stock_4",
+    "y_mm": 1050
+  },
+  {
+    "x_mm": 1225,
+    "customAngle": 0,
+    "orientation": "SOUTH",
+    "compass": "AB",
+    "useAlign": true,
+    "id": 4,
+    "poi": "constAreaYellow_2",
+    "y_mm": 1800
+  },
+  {
+    "x_mm": 1218,
+    "customAngle": 0,
+    "orientation": "CUSTOM",
+    "compass": "A",
+    "useAlign": false,
+    "id": 5,
+    "y_mm": 1448
+  },
+  {
+    "x_mm": 768,
+    "customAngle": 0,
+    "orientation": "SOUTH",
+    "compass": "AB",
+    "useAlign": true,
+    "id": 6,
+    "y_mm": 1455
+  },
+  {
+    "x_mm": 775,
+    "customAngle": 0,
+    "orientation": "CUSTOM",
+    "compass": "A",
+    "useAlign": false,
+    "id": 7,
+    "poi": "stock_3",
+    "y_mm": 1750
+  },
+  {
+    "x_mm": 775,
+    "customAngle": 0,
+    "orientation": "CUSTOM",
+    "compass": "A",
+    "useAlign": false,
+    "id": 8,
+    "poi": "constAreaYellow_1",
+    "y_mm": 1800
+  },
+  {
+    "x_mm": 375,
+    "customAngle": 0,
+    "orientation": "CUSTOM",
+    "compass": "A",
+    "useAlign": false,
+    "id": 9,
+    "poi": "waitPointYellow",
+    "y_mm": 675
+  },
+  {
+    "x_mm": 375,
+    "customAngle": 0,
+    "orientation": "CUSTOM",
+    "compass": "A",
+    "useAlign": false,
+    "id": 10,
+    "poi": "y1",
+    "y_mm": 225
+  }
+]}

@@ -1,0 +1,48 @@
+{"strategy": [
+  {
+    "x_mm": 375,
+    "customAngle": 0,
+    "orientation": "CUSTOM",
+    "compass": "A",
+    "useAlign": false,
+    "id": 0,
+    "poi": "startYellow",
+    "y_mm": 225
+  },
+  {
+    "x_mm": 422,
+    "customAngle": 0,
+    "orientation": "CUSTOM",
+    "compass": "A",
+    "useAlign": false,
+    "id": 1,
+    "y_mm": 780
+  },
+  {
+    "x_mm": 890,
+    "customAngle": 0,
+    "orientation": "CUSTOM",
+    "compass": "A",
+    "useAlign": false,
+    "id": 2,
+    "y_mm": 925
+  },
+  {
+    "x_mm": 1196,
+    "customAngle": 0,
+    "orientation": "CUSTOM",
+    "compass": "A",
+    "useAlign": false,
+    "id": 3,
+    "y_mm": 915
+  },
+  {
+    "x_mm": 1734,
+    "customAngle": 0,
+    "orientation": "CUSTOM",
+    "compass": "A",
+    "useAlign": false,
+    "id": 4,
+    "y_mm": 890
+  }
+]}
