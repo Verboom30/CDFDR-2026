@@ -99,35 +99,44 @@ class StrategyPoint {
 
 void drawRobotPreview(PGraphics pg, float px, float py) {
 
-  if (robotImg == null) return;
+  PImage imgToDraw;
+  float width_mm;
+  float height_mm;
+  float hitbox_mm;
+
+  if (usePAMI) {
+    imgToDraw = pamiImg;
+    width_mm = pamiWidth_mm;
+    height_mm = pamiHeight_mm;
+    hitbox_mm = pamiHitbox_mm;
+  } else {
+    imgToDraw = robotImg;
+    width_mm = robotWidth_mm;
+    height_mm = robotHeight_mm;
+    hitbox_mm = robotHitbox_mm;
+  }
+
+  if (imgToDraw == null) return;
 
   float a = radians(angleDeg);
-
-  // taille en millimètres réels
-  float robotWidth = robotWidth_mm;
-  float robotHeight = robotHeight_mm;
-  float hitbox = robotHitbox_mm;
 
   pg.pushMatrix();
   pg.pushStyle();
 
-  // on est déjà dans le repère monde (terrainView.scale(mmToPx))
   pg.translate(px, py);
 
-  // même orientation que simulation
+  // même convention que la simulation
   pg.rotate(a - HALF_PI);
 
   pg.imageMode(CENTER);
 
-  // hitbox
   pg.fill(0, 255, 255, 35);
   pg.stroke(0, 255, 255);
   pg.strokeWeight(2.0 / mmToPx);
-  pg.ellipse(0, 0, hitbox, hitbox);
+  pg.ellipse(0, 0, hitbox_mm, hitbox_mm);
 
-  // robot
   pg.tint(255, 180);
-  pg.image(robotImg, 0, 0, robotWidth, robotHeight);
+  pg.image(imgToDraw, 0, 0, width_mm, height_mm);
   pg.noTint();
 
   pg.popStyle();

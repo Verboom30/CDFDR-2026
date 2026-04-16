@@ -4,12 +4,16 @@ public static int currentSegment = 0;
 public static float t = 0.0;
 public static boolean isSimulating = false;
 
-public static float robotWidth_mm = 287;
-public static float robotHeight_mm = 284;
+public static float robotWidth_mm = 400;
+public static float robotHeight_mm = 400;
 public static float robotHitbox_mm = 400;
 
-public static float robotSpeed_mm_per_sec = 1000.0;
-public static float frameRateSim = 50.0;
+public static float pamiWidth_mm = 120;
+public static float pamiHeight_mm = 220;
+public static float pamiHitbox_mm = 220;
+
+public static float robotSpeed_mm_per_sec = 1500.0;
+public static float frameRateSim = 60.0;
 
 // orientation robot en radians
 public static float robotAngle = 0.0;
@@ -20,7 +24,10 @@ public static float rotationSpeed = 0.2;
 // phase rotation sur point
 public static boolean rotatingAtPoint = false;
 
+public static boolean differentialRobotMode = false;
+
 PImage robotImg;
+PImage pamiImg;
 
 
 // ==========================================
@@ -42,23 +49,40 @@ void updateSimulation() {
   // ROTATION SUR PLACE
   // ======================================
   if (rotatingAtPoint) {
-
-    StrategyPoint p = StrategyEditor.points.get(currentSegment);
-
-    float targetAngle = radians(p.angleDeg);
-
+  
+    float targetAngle;
+  
+    if (differentialRobotMode) {
+      // orientation vers le prochain point
+      if (currentSegment < StrategyEditor.points.size() - 1) {
+        StrategyPoint p1 = StrategyEditor.points.get(currentSegment);
+        StrategyPoint p2 = StrategyEditor.points.get(currentSegment + 1);
+  
+        targetAngle = atan2(
+          p2.y_mm - p1.y_mm,
+          p2.x_mm - p1.x_mm
+        );
+      } else {
+        targetAngle = robotAngle;
+      }
+    } else {
+      // mode normal : angle défini sur le point
+      StrategyPoint p = StrategyEditor.points.get(currentSegment);
+      targetAngle = radians(p.angleDeg);
+    }
+  
     robotAngle = lerpAngle(
       robotAngle,
       targetAngle,
       rotationSpeed
     );
-
+  
     if (abs(shortestAngleDiff(robotAngle, targetAngle)) < 0.02) {
       robotAngle = targetAngle;
       rotatingAtPoint = false;
       t = 0.0;
     }
-
+  
     return;
   }
 
@@ -119,9 +143,28 @@ void drawRobot(PGraphics pg, float scale) {
 
   if (!isSimulating || robotPos == null) return;
 
-  float robotWidth_px  = robotWidth_mm * scale;
-  float robotHeight_px = robotHeight_mm * scale;
-  float hitbox_px      = robotHitbox_mm * scale;
+  PImage imgToDraw;
+  float width_mm;
+  float height_mm;
+  float hitbox_mm;
+
+  if (usePAMI) {
+    imgToDraw = pamiImg;
+    width_mm = pamiWidth_mm;
+    height_mm = pamiHeight_mm;
+    hitbox_mm = pamiHitbox_mm;
+  } else {
+    imgToDraw = robotImg;
+    width_mm = robotWidth_mm;
+    height_mm = robotHeight_mm;
+    hitbox_mm = robotHitbox_mm;
+  }
+
+  if (imgToDraw == null) return;
+
+  float objWidth_px  = width_mm * scale;
+  float objHeight_px = height_mm * scale;
+  float hitbox_px    = hitbox_mm * scale;
 
   float px = robotPos.x * scale;
   float py = robotPos.y * scale;
@@ -131,19 +174,17 @@ void drawRobot(PGraphics pg, float scale) {
 
   pg.translate(px, py);
 
-  // si png pointe vers le haut :
+  // ajuste ici si nécessaire selon l'orientation native de tes PNG
   pg.rotate(robotAngle - HALF_PI);
 
   pg.imageMode(CENTER);
 
-  // hitbox
   pg.fill(255, 0, 0, 70);
   pg.stroke(255, 0, 0);
   pg.strokeWeight(2.0 / mmToPx);
   pg.ellipse(0, 0, hitbox_px, hitbox_px);
 
-  // robot
-  pg.image(robotImg, 0, 0, robotWidth_px, robotHeight_px);
+  pg.image(imgToDraw, 0, 0, objWidth_px, objHeight_px);
 
   pg.popStyle();
   pg.popMatrix();

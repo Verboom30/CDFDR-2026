@@ -17,6 +17,8 @@ Toggle toggleAddEnabled;
 boolean addPointEnabled = true;
 
 Toggle toggleShowOverlay;
+Toggle toggleDifferentialRobot;
+Toggle togglePAMI;
 
 int lastAutoSave = 0;
 int autoSaveInterval = 30 * 1000;
@@ -26,17 +28,9 @@ public class StrategyEditorGUI extends PApplet {
 
   StrategyEditor mainApp;
 
-  // ==========================================
-  // SETTINGS
-  // ==========================================
-
   public void settings() {
     size(400, 800);
   }
-
-  // ==========================================
-  // SETUP
-  // ==========================================
 
   public void setup() {
 
@@ -44,10 +38,6 @@ public class StrategyEditorGUI extends PApplet {
     surface.setLocation(1320, 100);
 
     cp5 = new ControlP5(this);
-
-    // ----------------------------
-    // Infos point sélectionné
-    // ----------------------------
 
     labelInfo = cp5.addTextlabel("labelInfo")
       .setText("No point selected")
@@ -61,7 +51,6 @@ public class StrategyEditorGUI extends PApplet {
       .setAutoClear(false)
       .setLabel("X (mm)")
       .setText("0");
-
     fieldX.getCaptionLabel().setColor(color(0, 102, 153));
 
     fieldY = cp5.addTextfield("y_mm")
@@ -70,7 +59,6 @@ public class StrategyEditorGUI extends PApplet {
       .setAutoClear(false)
       .setLabel("Y (mm)")
       .setText("0");
-
     fieldY.getCaptionLabel().setColor(color(0, 102, 153));
 
     fieldAngle = cp5.addTextfield("angleDeg")
@@ -79,7 +67,6 @@ public class StrategyEditorGUI extends PApplet {
       .setAutoClear(false)
       .setLabel("Angle °")
       .setText("0");
-
     fieldAngle.getCaptionLabel().setColor(color(0, 102, 153));
 
     cp5.addTextlabel("helpAngle")
@@ -87,21 +74,12 @@ public class StrategyEditorGUI extends PApplet {
       .setPosition(20, 145)
       .setColorValue(color(0, 102, 153));
 
-    // ----------------------------
-    // Add point
-    // ----------------------------
-
     toggleAddEnabled = cp5.addToggle("addPointEnabled")
       .setPosition(20, 190)
       .setSize(20, 20)
       .setLabel("Add points enabled")
       .setValue(true);
-
     toggleAddEnabled.getCaptionLabel().setColor(color(0, 102, 153));
-
-    // ----------------------------
-    // Navigation
-    // ----------------------------
 
     cp5.addButton("selectPrevPoint")
       .setLabel("Previous point")
@@ -117,10 +95,6 @@ public class StrategyEditorGUI extends PApplet {
       .setLabel("Delete selected")
       .setPosition(20, 280)
       .setSize(260, 30);
-
-    // ----------------------------
-    // Save / load
-    // ----------------------------
 
     cp5.addButton("saveStrategy")
       .setLabel("Save strategy")
@@ -142,32 +116,36 @@ public class StrategyEditorGUI extends PApplet {
       .setPosition(20, 430)
       .setSize(260, 30);
 
-    // ----------------------------
-    // Simulation
-    // ----------------------------
-
     cp5.addButton("startSimulation")
       .setLabel("Start simulation")
       .setPosition(20, 500)
       .setSize(120, 30);
 
+    toggleDifferentialRobot = cp5.addToggle("differentialRobotMode")
+      .setPosition(160, 500)
+      .setSize(20, 20)
+      .setValue(false)
+      .setLabel("Robot différentiel");
+    toggleDifferentialRobot.getCaptionLabel().setColor(color(0, 102, 153));
+
+    togglePAMI = cp5.addToggle("usePAMI")
+      .setPosition(160, 540)
+      .setSize(20, 20)
+      .setValue(false)
+      .setLabel("PAMI");
+    togglePAMI.getCaptionLabel().setColor(color(0, 102, 153));
+
     toggleShowOverlay = cp5.addToggle("showOverlay")
-      .setPosition(20, 560)
+      .setPosition(20, 590)
       .setSize(20, 20)
       .setValue(false)
       .setLabel("Show table overlay");
-
     toggleShowOverlay.getCaptionLabel().setColor(color(0, 102, 153));
 
     reloadTempStrategy();
   }
 
-  // ==========================================
-  // DRAW
-  // ==========================================
-
   public void draw() {
-
     background(220);
 
     if (millis() - lastAutoSave > autoSaveInterval) {
@@ -177,12 +155,7 @@ public class StrategyEditorGUI extends PApplet {
     }
   }
 
-  // ==========================================
-  // LABEL INFO
-  // ==========================================
-
   public void updateLabelInfo() {
-
     if (selected == null) return;
 
     labelInfo.setText(
@@ -194,16 +167,10 @@ public class StrategyEditorGUI extends PApplet {
     );
   }
 
-  // ==========================================
-  // SET SELECTED
-  // ==========================================
-
   public void setSelectedPoint(StrategyPoint p) {
-
     selected = p;
 
     if (selected != null) {
-
       updatingFromGUI = true;
 
       updateLabelInfo();
@@ -213,27 +180,31 @@ public class StrategyEditorGUI extends PApplet {
       fieldAngle.setText(nf(selected.angleDeg, 0, 1));
 
       updatingFromGUI = false;
-
     } else {
-
       labelInfo.setText("No point selected");
-
       fieldX.setText("");
       fieldY.setText("");
       fieldAngle.setText("");
     }
   }
 
-  // ==========================================
-  // EVENTS
-  // ==========================================
-
   public void controlEvent(ControlEvent e) {
-
     if (updatingFromGUI) return;
 
     if (e.getName().equals("addPointEnabled")) {
       addPointEnabled = e.getValue() == 1;
+      return;
+    }
+
+    if (e.getName().equals("differentialRobotMode")) {
+      StrategyEditor.differentialRobotMode = e.getValue() == 1;
+      println("[GUI] Robot différentiel: " + StrategyEditor.differentialRobotMode);
+      return;
+    }
+
+    if (e.getName().equals("usePAMI")) {
+      StrategyEditor.usePAMI = e.getValue() == 1;
+      println("[GUI] PAMI: " + StrategyEditor.usePAMI);
       return;
     }
 
@@ -280,10 +251,6 @@ public class StrategyEditorGUI extends PApplet {
     updateLabelInfo();
   }
 
-  // ==========================================
-  // HELPERS
-  // ==========================================
-
   public boolean isAddPointEnabled() {
     return addPointEnabled;
   }
@@ -292,17 +259,12 @@ public class StrategyEditorGUI extends PApplet {
     this.mainApp = app;
   }
 
-  // ==========================================
-  // SAVE / LOAD
-  // ==========================================
-
   public void saveStrategy() {
     savePointsToFile("strategy_temp.json");
     selectOutput("Save strategy to...", "saveStrategyToFile");
   }
 
   public void saveStrategyToFile(File selection) {
-
     if (selection == null) return;
 
     String path = selection.getAbsolutePath();
@@ -315,7 +277,6 @@ public class StrategyEditorGUI extends PApplet {
   }
 
   public void savePointsToFile(String path) {
-
     JSONObject data = exportPointsToJSON();
 
     if (path.startsWith("/") || path.contains(":")) {
@@ -326,12 +287,10 @@ public class StrategyEditorGUI extends PApplet {
   }
 
   public JSONObject exportPointsToJSON() {
-
     JSONObject data = new JSONObject();
     JSONArray list = new JSONArray();
 
     for (StrategyPoint p : StrategyEditor.points) {
-
       JSONObject entry = new JSONObject();
 
       entry.setInt("id", p.id);
@@ -361,19 +320,14 @@ public class StrategyEditorGUI extends PApplet {
   }
 
   public void loadStrategyFromFile(File selection) {
-
     if (selection == null) return;
 
-    JSONObject data =
-      loadJSONObject(selection.getAbsolutePath());
-
-    JSONArray list =
-      data.getJSONArray("strategy");
+    JSONObject data = loadJSONObject(selection.getAbsolutePath());
+    JSONArray list = data.getJSONArray("strategy");
 
     StrategyEditor.points.clear();
 
     for (int i = 0; i < list.size(); i++) {
-
       JSONObject entry = list.getJSONObject(i);
 
       StrategyPoint p = new StrategyPoint(
@@ -394,12 +348,7 @@ public class StrategyEditorGUI extends PApplet {
     mainApp.renumerotePoints();
   }
 
-  // ==========================================
-  // RESET
-  // ==========================================
-
   public void resetStrategy() {
-
     int confirm =
       javax.swing.JOptionPane.showConfirmDialog(
       null,
@@ -408,21 +357,14 @@ public class StrategyEditorGUI extends PApplet {
       javax.swing.JOptionPane.YES_NO_OPTION
       );
 
-    if (confirm ==
-      javax.swing.JOptionPane.YES_OPTION) {
-
+    if (confirm == javax.swing.JOptionPane.YES_OPTION) {
       StrategyEditor.points.clear();
       mainApp.renumerotePoints();
       setSelectedPoint(null);
     }
   }
 
-  // ==========================================
-  // DELETE SELECTED
-  // ==========================================
-
   public void deleteSelectedPoint() {
-
     if (selected == null) {
       println("[GUI] No selected point.");
       return;
@@ -440,12 +382,7 @@ public class StrategyEditorGUI extends PApplet {
     println("[GUI] Selected point deleted.");
   }
 
-  // ==========================================
-  // NAVIGATION
-  // ==========================================
-
   public void selectPrevPoint() {
-
     if (StrategyEditor.points.size() == 0) return;
 
     if (selected == null) {
@@ -461,7 +398,6 @@ public class StrategyEditorGUI extends PApplet {
   }
 
   public void selectNextPoint() {
-
     if (StrategyEditor.points.size() == 0) return;
 
     if (selected == null) {
@@ -476,12 +412,7 @@ public class StrategyEditorGUI extends PApplet {
     StrategyEditor.selectedPoint = selected;
   }
 
-  // ==========================================
-  // SIMULATION
-  // ==========================================
-
   public void startSimulation() {
-
     if (StrategyEditor.points.size() < 2) {
       println("[GUI] Need at least 2 points.");
       return;
@@ -496,8 +427,18 @@ public class StrategyEditorGUI extends PApplet {
       StrategyEditor.points.get(0).y_mm
     );
 
-    StrategyEditor.robotAngle =
-      radians(StrategyEditor.points.get(0).angleDeg);
+    if (StrategyEditor.differentialRobotMode) {
+      StrategyPoint p0 = StrategyEditor.points.get(0);
+      StrategyPoint p1 = StrategyEditor.points.get(1);
+
+      StrategyEditor.robotAngle = atan2(
+        p1.y_mm - p0.y_mm,
+        p1.x_mm - p0.x_mm
+      );
+    } else {
+      StrategyEditor.robotAngle =
+        radians(StrategyEditor.points.get(0).angleDeg);
+    }
 
     StrategyEditor.isSimulating = true;
 
