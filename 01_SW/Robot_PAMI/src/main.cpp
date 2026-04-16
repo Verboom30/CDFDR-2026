@@ -110,20 +110,23 @@ void checkSensors()
 
     while (true)
     {
-        uint16_t distance = g_tof->readRangeSingleMillimeters();
-
-        if (g_tof->timeoutOccurred() || distance == 65535)
+        if (FsmState == GAME)
         {
-            printf("Read error\r\n");
+            uint16_t distance = g_tof->readRangeSingleMillimeters();
+            if (g_tof->timeoutOccurred() || distance == 65535)
+            {
+                printf("Read error\r\n");
+            }
+            else
+            {
+                printf("Distance = %u mm\r\n", distance);
+                StopMove = (distance < 300) ? 1 : 0;
+                LedR = StopMove;
+                LedG = StopMove;
+                LedB = StopMove;
+            }
         }
-        else
-        {
-            printf("Distance = %u mm\r\n", distance);
-            StopMove = (distance < 150) ? 1 : 0;
-            LedR = StopMove;
-        }
-
-        ThisThread::sleep_for(100ms);
+        ThisThread::sleep_for(50ms);
     }
 }
 
@@ -163,49 +166,69 @@ void routineAffichage()
         ThisThread::sleep_for(25ms);
     }
 }
-
+//*****************************************************************************
+//                                DRIVE
+//*****************************************************************************
+void taskDrive() 
+{
+    RobotDiff.setPosition(0, 0, 0, Couleur_Team);
+    RobotDiff.Robotgoto(0,    1000,   90, Couleur_Team, NORMALSPEED);
+    RobotDiff.Robotgoto(1000, 1000,  180, Couleur_Team, NORMALSPEED);
+    RobotDiff.Robotgoto(1000, 0,     -90, Couleur_Team, NORMALSPEED);
+    RobotDiff.Robotgoto(0,    0,       0, Couleur_Team, NORMALSPEED);
+}
 //*****************************************************************************
 //                                MAIN FSM
 //*****************************************************************************
-void main_thread(void)
+void main_thread(void) 
 {
-    FsmState = IDLE;
+  FsmState = IDLE;
+ 
+  Couleur_Team = !SW_team;
+  if (Couleur_Team == false)
+  {
+    // bleu
+    offset_posX = 0;
+    offset_Alpha = 1;
+    LedR = 0;
+    LedG = 0;
+    LedB = 1;
+  }
+  else
+  {
+    // jaune
+    offset_posX = 3000;
+    offset_Alpha = -1;
+    LedR = 1;
+    LedG = 1;
+    LedB = 0;
+  }
 
-    while (1)
+  
+
+  while (1)
+  {
+
+    switch (FsmState)
     {
-        switch (FsmState)
-        {
-            case IDLE:
-                RobotDiff.setPosition(0, 0, 0, Couleur_Team);
+    case IDLE:
+      if (SW_Tirette == 1 and FsmState != END)
+      {
+        endMatch.attach(endMatchProcess, 100s);
+        FsmState = GAME; // Lancement du match !
+      }
+      break;
+    case GAME:
+      taskDrive();
+      FsmState = END;
+      break;
 
-                RobotDiff.Robotgoto(0,    1000,   90, Couleur_Team, NORMALSPEED);
-                RobotDiff.Robotgoto(1000, 1000,  180, Couleur_Team, NORMALSPEED);
-                RobotDiff.Robotgoto(1000, 0,     -90, Couleur_Team, NORMALSPEED);
-                RobotDiff.Robotgoto(0,    0,       0, Couleur_Team, NORMALSPEED);
-
-                FsmState = END;
-                break;
-
-            case START_UP:
-                break;
-
-            case CAL:
-                break;
-
-            case WAIT_MATCH:
-                break;
-
-            case GAME:
-                FsmState = END;
-                break;
-
-            case END:
-                break;
-        }
-
-        ThisThread::sleep_for(10ms);
+    case END:
+      break;
     }
+  }
 }
+
 
 //*****************************************************************************
 //                                   MAIN
@@ -237,14 +260,16 @@ int main()
 
     while (1)
     {
-        if ((end_match || SW_bau == 1) && (Fin_de_match == false))
+        if ((end_match || SW_bau != 1) && (Fin_de_match == false))
         {
             Fin_de_match = true;
 
-            // game_thread.terminate();
-            // sensor_thread.terminate();
+            game_thread.terminate();
+            sensor_thread.terminate();
+            LedR = 1;
+            LedG = 0;
+            LedB = 0;
+            RobotDiff.stop();
         }
-
-        ThisThread::sleep_for(1s);
     }
 }

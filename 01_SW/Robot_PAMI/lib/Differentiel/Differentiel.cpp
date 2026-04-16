@@ -25,14 +25,15 @@ void differentiel::run()
 
 void differentiel::pause()
 {
-    StepperG->pause();
-    StepperD->pause();
+    
+    StepperG->pause(StepperG->getSpeed()*ACC);
+    StepperD->pause(StepperD->getSpeed()*ACC);
 }
 
 void differentiel::resume()
 {
-    StepperG->resume();
-    StepperD->resume();
+    StepperG->resume(StepperG->getAcceleration());
+    StepperD->resume(StepperD->getAcceleration());
 }
 void differentiel::stop()
 {
@@ -169,13 +170,32 @@ void differentiel::updatePosition()
 
 void differentiel::Robotmoveto(int distance, int alpha, bool enableLidar, float coefspeed)
 {
-  move(distance, alpha, coefspeed);
-  do
-  {
-    if(enableLidar)(*_stopLidar) ? pause() : resume();
-    ThisThread::sleep_for(100ms);
-  } while (!PosCibleDone());
+    move(distance, alpha, coefspeed);
+
+    bool pauseDemandee = false;
+
+    do
+    {
+        const bool obstacle = enableLidar && (*_stopLidar);
+
+        if (obstacle)
+        {
+            if (!pauseDemandee)
+            {
+                pause();
+                pauseDemandee = true;
+            }
+        }
+        else if (pauseDemandee)
+        {
+            resume();
+            pauseDemandee = false;
+        }
+
+        ThisThread::sleep_for(100ms);
+    } while (!PosCibleDone());
 }
+
 
 void differentiel::Robotgoto(int positionX, int positionY, int alpha, bool team, float coefSpeed)
 {
