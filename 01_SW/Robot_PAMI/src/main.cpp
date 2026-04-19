@@ -14,6 +14,9 @@
 #define NORMALSPEED 1.0f
 #define SLOWSPEED   0.4f
 
+#define STARTMATCH 2s
+#define ENDMATCH 100s
+
 //*****************************************************************************
 //                                 UART_TMC
 //*****************************************************************************
@@ -23,7 +26,7 @@ BufferedSerial pc(USBTX, USBRX, 230400);
 //*****************************************************************************
 //                                   MOVE
 //*****************************************************************************
-bool StopMove      = false;
+volatile bool StopMove = false;
 bool Fin_de_match  = false;
 bool Couleur_Team  = false;   // false = bleu / true = jaune
 
@@ -55,7 +58,7 @@ DigitalOut LedB(LED_B);
 //*****************************************************************************
 //                              LASER SENSOR
 //*****************************************************************************
-Thread sensor_thread;
+Thread sensor_thread(osPriorityNormal, 8192);
 
 I2C i2c(VL53L0_I2C_SDA, VL53L0_I2C_SCL);
 DigitalOut xshut(XSHUT_1);
@@ -70,10 +73,13 @@ int score         = 0;
 int offset_posX   = 0;
 int offset_Alpha  = 1;
 
-volatile bool end_match = false;
+volatile bool end_match   = false;
+volatile bool start_match = false;
+bool LatchBau = false;
 
-Timeout endMatch;
-Thread game_thread;
+Thread game_thread(osPriorityNormal, 8192);
+Thread endMatch_thread(osPriorityNormal, 512);
+Thread Servo_thread(osPriorityNormal, 512);
 
 //*****************************************************************************
 //                             SENSOR THREAD
@@ -88,9 +94,6 @@ void checkSensors()
     xshut = 1;
     ThisThread::sleep_for(50ms);
 
-    // while (g_tof == nullptr)
-    //     ThisThread::sleep_for(10ms);
-
     g_tof->setTimeout(200);
 
     printf("Init sensor...\r\n");
@@ -99,7 +102,6 @@ void checkSensors()
     if (!g_tof->init())
     {
         printf("VL53L0X init failed\r\n");
-
         while (true)
         {
             ThisThread::sleep_for(500ms);
@@ -131,11 +133,16 @@ void checkSensors()
 }
 
 //*****************************************************************************
-//                              END MATCH
+//                              END MATCH THREAD
 //*****************************************************************************
 void endMatchProcess()
 {
+    ThisThread::sleep_for(STARTMATCH);
+    start_match = true;
+    printf("Debut du match !\r\n");
+    ThisThread::sleep_for(ENDMATCH - STARTMATCH);
     end_match = true;
+    printf("Fin du match !\r\n");
 }
 
 //*****************************************************************************
@@ -148,7 +155,6 @@ float theta2pluse(int theta)
 
 void printPosition()
 {
-    // printf pour processing
     printf("%f;%f;%f\r\n",
            RobotDiff.getPositionX(),
            RobotDiff.getPositionY(),
@@ -166,10 +172,11 @@ void routineAffichage()
         ThisThread::sleep_for(25ms);
     }
 }
+
 //*****************************************************************************
 //                                DRIVE
 //*****************************************************************************
-void taskDrive() 
+void taskDrive()
 {
     RobotDiff.setPosition(0, 0, 0, Couleur_Team);
     RobotDiff.Robotgoto(0,    1000,   90, Couleur_Team, NORMALSPEED);
@@ -177,58 +184,78 @@ void taskDrive()
     RobotDiff.Robotgoto(1000, 0,     -90, Couleur_Team, NORMALSPEED);
     RobotDiff.Robotgoto(0,    0,       0, Couleur_Team, NORMALSPEED);
 }
+
+//*****************************************************************************
+//                          ACTION SERVO FIN DE MATCH
+//*****************************************************************************
+// Exécute la séquence servo de fin de match.
+// Vérifie le BAU avant chaque étape — si BAU actif, arrêt immédiat.
+void servoFinDeMatch()
+{
+    while (1)
+    {
+        Servo1.pulsewidth_us(theta2pluse(140));
+        ThisThread::sleep_for(400ms);
+        Servo1.pulsewidth_us(theta2pluse(15));
+        ThisThread::sleep_for(800ms);
+    }
+}
+
 //*****************************************************************************
 //                                MAIN FSM
 //*****************************************************************************
-void main_thread(void) 
+void main_thread(void)
 {
-  FsmState = IDLE;
- 
-  Couleur_Team = !SW_team;
-  if (Couleur_Team == false)
-  {
-    // bleu
-    offset_posX = 0;
-    offset_Alpha = 1;
-    LedR = 0;
-    LedG = 0;
-    LedB = 1;
-  }
-  else
-  {
-    // jaune
-    offset_posX = 3000;
-    offset_Alpha = -1;
-    LedR = 1;
-    LedG = 1;
-    LedB = 0;
-  }
+    FsmState = IDLE;
 
-  
-
-  while (1)
-  {
-
-    switch (FsmState)
+    Couleur_Team = !SW_team;
+    if (Couleur_Team == false)
     {
-    case IDLE:
-      if (SW_Tirette == 1 and FsmState != END)
-      {
-        endMatch.attach(endMatchProcess, 100s);
-        FsmState = GAME; // Lancement du match !
-      }
-      break;
-    case GAME:
-      taskDrive();
-      FsmState = END;
-      break;
-
-    case END:
-      break;
+        // bleu
+        offset_posX  = 0;
+        offset_Alpha = 1;
+        LedR = 0;
+        LedG = 0;
+        LedB = 1;
     }
-  }
-}
+    else
+    {
+        // jaune
+        offset_posX  = 3000;
+        offset_Alpha = -1;
+        LedR = 1;
+        LedG = 1;
+        LedB = 0;
+    }
 
+    while (1)
+    {
+        if (Fin_de_match) FsmState = END;
+
+        switch (FsmState)
+        {
+        case IDLE:
+            if (SW_Tirette == 1 && FsmState != END)
+            {
+                endMatch_thread.start(endMatchProcess);
+                FsmState = WAIT_START;
+            }
+            break;
+
+        case WAIT_START:
+            if (start_match == true) FsmState = GAME;
+            break;
+
+        case GAME:
+            taskDrive();
+            FsmState = END;
+            break;
+
+        case END:
+            break;
+        }
+    }
+}
 
 //*****************************************************************************
 //                                   MAIN
@@ -249,27 +276,39 @@ int main()
     LedR = 0;
     LedG = 0;
     LedB = 0;
+    Servo1.period_ms(20);
+    //Servo1.pulsewidth_us(theta2pluse(15));
 
     TMCSerial.setup_all_stepper();
 
-    static VL53L0X_mbed tof(i2c);   // adresse par défaut 0x29 (7 bits)
+    static VL53L0X_mbed tof(i2c);
     g_tof = &tof;
 
-    sensor_thread.start(checkSensors);
+    sensor_thread.start(mbed::callback(checkSensors));
     game_thread.start(main_thread);
 
     while (1)
     {
-        if ((end_match || SW_bau != 1) && (Fin_de_match == false))
+        if(SW_bau != 1 ) LatchBau = true;
+        if ((end_match || LatchBau == true) && (Fin_de_match == false))
         {
             Fin_de_match = true;
-
             game_thread.terminate();
             sensor_thread.terminate();
+            RobotDiff.stop();
             LedR = 1;
             LedG = 0;
             LedB = 0;
-            RobotDiff.stop();
         }
+
+         if (Fin_de_match){
+            if(LatchBau == false) Servo_thread.start(servoFinDeMatch);
+            else 
+            {
+                Servo_thread.terminate();
+                Servo1.pulsewidth_us(theta2pluse(15));
+                //Servo1 = 0.0;
+            }
+         }
     }
 }

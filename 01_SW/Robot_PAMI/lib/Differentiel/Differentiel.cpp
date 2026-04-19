@@ -1,6 +1,6 @@
 #include "Differentiel.hpp"
 
-differentiel::differentiel(Stepper* moteurGauche, Stepper* moteurDroit, bool* StopLidar)
+differentiel::differentiel(Stepper* moteurGauche, Stepper* moteurDroit, volatile bool* StopLidar)
     : StepperG(moteurGauche), StepperD(moteurDroit),_stopLidar(StopLidar),  readyCount(0), semG(0), semD(0) 
 {
     _positionX = _positionY = 0;

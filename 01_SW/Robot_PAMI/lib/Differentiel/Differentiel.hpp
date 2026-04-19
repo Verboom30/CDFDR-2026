@@ -23,7 +23,7 @@
 class differentiel
 {
     public:
-    differentiel(Stepper* moteurGauche, Stepper* moteurDroit, bool* StopLidar);
+    differentiel(Stepper* moteurGauche, Stepper* moteurDroit, volatile bool* StopLidar);
 
     void run();
     void stop();
@@ -64,7 +64,7 @@ private :
     // Moteurs
     Stepper* StepperG;
     Stepper* StepperD;
-    bool* _stopLidar;
+    volatile bool* _stopLidar;
 
     // Threads et synchro
     Thread routineG;
