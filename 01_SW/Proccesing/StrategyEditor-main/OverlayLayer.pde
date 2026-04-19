@@ -1,4 +1,3 @@
-boolean showOverlay = true;
 
 PImage robotOverlayImg;
 
@@ -99,7 +98,8 @@ void drawAngleRosace(PGraphics pg, float scale) {
 
     pg.pushMatrix();
     pg.translate(centerX, centerY);
-    pg.rotate(HALF_PI);  // rotation de 90° vers la droite
+    pg.rotate(robotImageToRenderRad(robotAngleDeg)-HALF_PI);
+   
 
     pg.imageMode(CENTER);
     pg.tint(255); // transparence légère

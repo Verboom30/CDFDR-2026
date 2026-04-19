@@ -6,7 +6,6 @@ ControlP5 cp5;
 StrategyPoint selected = null;
 
 Textlabel labelInfo;
-
 Textfield fieldX;
 Textfield fieldY;
 Textfield fieldAngle;
@@ -23,17 +22,15 @@ Toggle togglePAMI;
 int lastAutoSave = 0;
 int autoSaveInterval = 30 * 1000;
 
-
 public class StrategyEditorGUI extends PApplet {
 
   StrategyEditor mainApp;
 
   public void settings() {
-    size(400, 800);
+    size(400, 820);
   }
 
   public void setup() {
-
     surface.setTitle("StrategyEditor - GUI");
     surface.setLocation(1320, 100);
 
@@ -174,7 +171,6 @@ public class StrategyEditorGUI extends PApplet {
       updatingFromGUI = true;
 
       updateLabelInfo();
-
       fieldX.setText(nf(selected.x_mm, 0, 0));
       fieldY.setText(nf(selected.y_mm, 0, 0));
       fieldAngle.setText(nf(selected.angleDeg, 0, 1));
@@ -198,13 +194,11 @@ public class StrategyEditorGUI extends PApplet {
 
     if (e.getName().equals("differentialRobotMode")) {
       StrategyEditor.differentialRobotMode = e.getValue() == 1;
-      println("[GUI] Robot différentiel: " + StrategyEditor.differentialRobotMode);
       return;
     }
 
     if (e.getName().equals("usePAMI")) {
       StrategyEditor.usePAMI = e.getValue() == 1;
-      println("[GUI] PAMI: " + StrategyEditor.usePAMI);
       return;
     }
 
@@ -214,36 +208,22 @@ public class StrategyEditorGUI extends PApplet {
 
     case "x_mm":
       try {
-        selected.x_mm = constrain(
-          Float.parseFloat(e.getStringValue()),
-          0, 3000
-        );
-      }
-      catch(Exception ex) {
+        selected.x_mm = constrain(Float.parseFloat(e.getStringValue()), 0, TERRAIN_W_MM);
+      } catch(Exception ex) {
       }
       break;
 
     case "y_mm":
       try {
-        selected.y_mm = constrain(
-          Float.parseFloat(e.getStringValue()),
-          0, 2000
-        );
-      }
-      catch(Exception ex) {
+        selected.y_mm = constrain(Float.parseFloat(e.getStringValue()), 0, TERRAIN_H_MM);
+      } catch(Exception ex) {
       }
       break;
 
     case "angleDeg":
       try {
-        float a = Float.parseFloat(e.getStringValue());
-
-        while (a < 0) a += 360;
-        while (a >= 360) a -= 360;
-
-        selected.angleDeg = a;
-      }
-      catch(Exception ex) {
+        selected.angleDeg = normalizeAngle180(Float.parseFloat(e.getStringValue()));
+      } catch(Exception ex) {
       }
       break;
     }
@@ -268,7 +248,6 @@ public class StrategyEditorGUI extends PApplet {
     if (selection == null) return;
 
     String path = selection.getAbsolutePath();
-
     if (!path.toLowerCase().endsWith(".json")) {
       path += ".json";
     }
@@ -306,7 +285,6 @@ public class StrategyEditorGUI extends PApplet {
     }
 
     data.setJSONArray("strategy", list);
-
     return data;
   }
 
@@ -320,7 +298,7 @@ public class StrategyEditorGUI extends PApplet {
   }
 
   public void loadStrategyFromFile(File selection) {
-    if (selection == null) return;
+    if (selection == null || !selection.exists()) return;
 
     JSONObject data = loadJSONObject(selection.getAbsolutePath());
     JSONArray list = data.getJSONArray("strategy");
@@ -336,11 +314,13 @@ public class StrategyEditorGUI extends PApplet {
         entry.getFloat("y_mm")
       );
 
-      if (entry.hasKey("poi"))
+      if (entry.hasKey("poi")) {
         p.poiName = entry.getString("poi");
+      }
 
-      if (entry.hasKey("angleDeg"))
-        p.angleDeg = entry.getFloat("angleDeg");
+      if (entry.hasKey("angleDeg")) {
+        p.angleDeg = normalizeAngle180(entry.getFloat("angleDeg"));
+      }
 
       StrategyEditor.points.add(p);
     }
@@ -349,37 +329,31 @@ public class StrategyEditorGUI extends PApplet {
   }
 
   public void resetStrategy() {
-    int confirm =
-      javax.swing.JOptionPane.showConfirmDialog(
+    int confirm = javax.swing.JOptionPane.showConfirmDialog(
       null,
       "Delete all points ?",
       "Confirm Reset",
       javax.swing.JOptionPane.YES_NO_OPTION
-      );
+    );
 
     if (confirm == javax.swing.JOptionPane.YES_OPTION) {
       StrategyEditor.points.clear();
       mainApp.renumerotePoints();
+      selected = null;
+      StrategyEditor.selectedPoint = null;
       setSelectedPoint(null);
     }
   }
 
   public void deleteSelectedPoint() {
-    if (selected == null) {
-      println("[GUI] No selected point.");
-      return;
-    }
+    if (selected == null) return;
 
     StrategyEditor.points.remove(selected);
-
     mainApp.renumerotePoints();
 
     selected = null;
     StrategyEditor.selectedPoint = null;
-
     setSelectedPoint(null);
-
-    println("[GUI] Selected point deleted.");
   }
 
   public void selectPrevPoint() {
@@ -389,8 +363,7 @@ public class StrategyEditorGUI extends PApplet {
       selected = StrategyEditor.points.get(0);
     } else {
       int i = StrategyEditor.points.indexOf(selected);
-      if (i > 0)
-        selected = StrategyEditor.points.get(i - 1);
+      if (i > 0) selected = StrategyEditor.points.get(i - 1);
     }
 
     setSelectedPoint(selected);
@@ -404,8 +377,9 @@ public class StrategyEditorGUI extends PApplet {
       selected = StrategyEditor.points.get(0);
     } else {
       int i = StrategyEditor.points.indexOf(selected);
-      if (i < StrategyEditor.points.size() - 1)
+      if (i < StrategyEditor.points.size() - 1) {
         selected = StrategyEditor.points.get(i + 1);
+      }
     }
 
     setSelectedPoint(selected);
@@ -430,19 +404,13 @@ public class StrategyEditorGUI extends PApplet {
     if (StrategyEditor.differentialRobotMode) {
       StrategyPoint p0 = StrategyEditor.points.get(0);
       StrategyPoint p1 = StrategyEditor.points.get(1);
-
-      StrategyEditor.robotAngle = atan2(
-        p1.y_mm - p0.y_mm,
-        p1.x_mm - p0.x_mm
-      );
+      StrategyEditor.robotAngleDeg = headingTo(p0.x_mm, p0.y_mm, p1.x_mm, p1.y_mm);
     } else {
-      StrategyEditor.robotAngle =
-        radians(StrategyEditor.points.get(0).angleDeg);
+      StrategyEditor.robotAngleDeg = StrategyEditor.points.get(0).angleDeg;
     }
 
+    StrategyEditor.robotAngle = StrategyEditor.robotAngleDeg;
     StrategyEditor.isSimulating = true;
-
-    println("[GUI] Simulation started.");
   }
 
   public void showOverlay(boolean val) {
