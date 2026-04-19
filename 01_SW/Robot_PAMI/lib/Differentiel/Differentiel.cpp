@@ -235,9 +235,9 @@ void differentiel::Robotgoto(int positionX, int positionY, int alpha, bool team,
   Robotmoveto(move, 0, true, coefSpeed);
 
   // 3. Rotation finale vers Alpha
-  updatePosition();
-  ThisThread::sleep_for(10ms);
-  Robotmoveto(0, finalAlpha, false, coefSpeed);
+//   updatePosition();
+//   ThisThread::sleep_for(10ms);
+//   Robotmoveto(0, finalAlpha, false, coefSpeed);
 }
 
 // ======================== Getters ========================= //

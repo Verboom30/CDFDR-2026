@@ -86,7 +86,7 @@ Thread Servo_thread(osPriorityNormal, 512);
 //*****************************************************************************
 void checkSensors()
 {
-    printf("Thread sensor start\r\n");
+    //printf("Thread sensor start\r\n");
 
     i2c.frequency(400000);
 
@@ -96,19 +96,19 @@ void checkSensors()
 
     g_tof->setTimeout(200);
 
-    printf("Init sensor...\r\n");
+    //printf("Init sensor...\r\n");
     ThisThread::sleep_for(100ms);
 
     if (!g_tof->init())
     {
-        printf("VL53L0X init failed\r\n");
+        //printf("VL53L0X init failed\r\n");
         while (true)
         {
             ThisThread::sleep_for(500ms);
         }
     }
 
-    printf("Sensor OK\r\n");
+    //printf("Sensor OK\r\n");
 
     while (true)
     {
@@ -117,12 +117,12 @@ void checkSensors()
             uint16_t distance = g_tof->readRangeSingleMillimeters();
             if (g_tof->timeoutOccurred() || distance == 65535)
             {
-                printf("Read error\r\n");
+                //printf("Read error\r\n");
             }
             else
             {
-                printf("Distance = %u mm\r\n", distance);
-                StopMove = (distance < 300) ? 1 : 0;
+                //printf("Distance = %u mm\r\n", distance);
+                //StopMove = (distance < 200) ? 1 : 0;
                 LedR = StopMove;
                 LedG = StopMove;
                 LedB = StopMove;
@@ -139,10 +139,10 @@ void endMatchProcess()
 {
     ThisThread::sleep_for(STARTMATCH);
     start_match = true;
-    printf("Debut du match !\r\n");
+    //printf("Debut du match !\r\n");
     ThisThread::sleep_for(ENDMATCH - STARTMATCH);
     end_match = true;
-    printf("Fin du match !\r\n");
+    //printf("Fin du match !\r\n");
 }
 
 //*****************************************************************************
@@ -178,11 +178,23 @@ void routineAffichage()
 //*****************************************************************************
 void taskDrive()
 {
-    RobotDiff.setPosition(0, 0, 0, Couleur_Team);
-    RobotDiff.Robotgoto(0,    1000,   90, Couleur_Team, NORMALSPEED);
-    RobotDiff.Robotgoto(1000, 1000,  180, Couleur_Team, NORMALSPEED);
-    RobotDiff.Robotgoto(1000, 0,     -90, Couleur_Team, NORMALSPEED);
-    RobotDiff.Robotgoto(0,    0,       0, Couleur_Team, NORMALSPEED);
+
+
+RobotDiff.setPosition(375, 1775, 180, Couleur_Team);
+RobotDiff.Robotgoto(380, 1196, 0, Couleur_Team, NORMALSPEED);  // Step 1
+RobotDiff.Robotgoto(776, 1055, 0, Couleur_Team, NORMALSPEED);  // Step 2
+RobotDiff.Robotgoto(470, 769, 0, Couleur_Team, NORMALSPEED);  // Step 3
+RobotDiff.Robotgoto(909, 519, 0, Couleur_Team, NORMALSPEED);  // Step 4
+RobotDiff.Robotgoto(1061, 1004, 0, Couleur_Team, NORMALSPEED);  // Step 5
+RobotDiff.Robotgoto(793, 1244, 0, Couleur_Team, NORMALSPEED);  // Step 6
+RobotDiff.Robotgoto(508, 1603, 0, Couleur_Team, NORMALSPEED);  // Step 7
+RobotDiff.Robotgoto(375, 1775, 0, Couleur_Team, NORMALSPEED);  // Step 8 - POI startYellow
+
+
+
+
+
+
 }
 
 //*****************************************************************************
