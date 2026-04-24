@@ -192,7 +192,7 @@ void differentiel::Robotmoveto(int distance, int alpha, bool enableLidar, float 
             pauseDemandee = false;
         }
 
-        ThisThread::sleep_for(100ms);
+        ThisThread::sleep_for(10ms);
     } while (!PosCibleDone());
 }
 
@@ -227,7 +227,7 @@ void differentiel::Robotgoto(int positionX, int positionY, int alpha, bool team,
   // 1. Rotation vers direction
   updatePosition();
   ThisThread::sleep_for(10ms);
-  Robotmoveto(0, moveAlpha, false, coefSpeed);
+  Robotmoveto(0, moveAlpha, true, coefSpeed);
 
   // 2. Translation
   updatePosition();

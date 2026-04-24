@@ -15,7 +15,7 @@
 #define SLOWSPEED   0.4f
 
 #define STARTMATCH 2s
-#define ENDMATCH 100s
+#define ENDMATCH 15s
 
 //*****************************************************************************
 //                                 UART_TMC
@@ -96,12 +96,12 @@ void checkSensors()
 
     g_tof->setTimeout(200);
 
-    //printf("Init sensor...\r\n");
+    printf("Init sensor...\r\n");
     ThisThread::sleep_for(100ms);
 
     if (!g_tof->init())
     {
-        //printf("VL53L0X init failed\r\n");
+        printf("VL53L0X init failed\r\n");
         while (true)
         {
             ThisThread::sleep_for(500ms);
@@ -122,7 +122,7 @@ void checkSensors()
             else
             {
                 //printf("Distance = %u mm\r\n", distance);
-                //StopMove = (distance < 200) ? 1 : 0;
+                StopMove = (distance < 200) ? 1 : 0;
                 LedR = StopMove;
                 LedG = StopMove;
                 LedB = StopMove;
@@ -289,7 +289,7 @@ int main()
     LedG = 0;
     LedB = 0;
     Servo1.period_ms(20);
-    //Servo1.pulsewidth_us(theta2pluse(15));
+    Servo1.pulsewidth_us(theta2pluse(30));
 
     TMCSerial.setup_all_stepper();
 
@@ -319,6 +319,7 @@ int main()
             {
                 Servo_thread.terminate();
                 Servo1.pulsewidth_us(theta2pluse(15));
+                
                 //Servo1 = 0.0;
             }
          }
