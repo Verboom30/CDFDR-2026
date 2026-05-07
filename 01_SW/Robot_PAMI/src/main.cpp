@@ -1,308 +1,342 @@
 #include "mbed.h"
+#include <inttypes.h>
+#include <cmath>
 
-I2C i2c(PB_7, PB_6); // SDA, SCL
+#include "pinout.hpp"
+#include "main_pck.hpp"
+#include "Stepper.hpp"
+#include "UART_TMC.hpp"
+#include "Differentiel.hpp"
+#include "VL53L0X_mbed.hpp"
 
-#define MUX_ADDR_7BIT       0x70
-#define TCS_ADDR_7BIT       0x29
+//#define DEBUG
 
-#define MUX_ADDR            (MUX_ADDR_7BIT << 1)
-#define TCS_ADDR            (TCS_ADDR_7BIT << 1)
+#define NORMALSPEED 1.0f
+#define SLOWSPEED   0.4f
+#define PAMI_3
+#define STARTMATCH 2s
+#define ENDMATCH 15s
 
-#define TCS_ENABLE          0x80
-#define TCS_ATIME           0x81
-#define TCS_ID              0x92
-#define TCS_CDATAL          0x94
-#define TCS_RDATAL          0x96
-#define TCS_GDATAL          0x98
-#define TCS_BDATAL          0x9A
+//*****************************************************************************
+//                                 UART_TMC
+//*****************************************************************************
+Uart_TMC TMCSerial(TMC_UART_TX, TMC_UART_RX, R_SENSE);
+BufferedSerial pc(USBTX, USBRX, 230400);
 
-#define TCS_PON             0x01
-#define TCS_AEN             0x02
+//*****************************************************************************
+//                                   MOVE
+//*****************************************************************************
+volatile bool StopMove = false;
+bool Fin_de_match  = false;
+bool Couleur_Team  = false;   // false = bleu / true = jaune
 
-enum ColorDetected {
-    COLOR_NONE,
-    COLOR_BLUE,
-    COLOR_YELLOW
-};
+Stepper StepperG(STEP_G, DIR_G, false);
+Stepper StepperD(STEP_D, DIR_D, true);
 
-struct TcsColor {
-    uint16_t clear;
-    uint16_t red;
-    uint16_t green;
-    uint16_t blue;
-};
+differentiel RobotDiff(&StepperG, &StepperD, &StopMove);
 
-TcsColor baseline[4];
-bool baseline_ok[4] = {false, false, false, false};
+//*****************************************************************************
+//                                  SWITCH
+//*****************************************************************************
+DigitalIn SW_team(SW_TEAM);
+DigitalIn SW_bau(SW_BAU);
+DigitalIn SW_Tirette(TIRETTE);
 
-bool select_mux_channel(uint8_t channel)
+//*****************************************************************************
+//                                  SERVO
+//*****************************************************************************
+PwmOut Servo1(SERVO_1);
+PwmOut Servo2(SERVO_2);
+
+//*****************************************************************************
+//                                   LED
+//*****************************************************************************
+DigitalOut LedR(LED_R);
+DigitalOut LedG(LED_G);
+DigitalOut LedB(LED_B);
+
+//*****************************************************************************
+//                              LASER SENSOR
+//*****************************************************************************
+Thread sensor_thread(osPriorityNormal, 8192);
+
+I2C i2c(VL53L0_I2C_SDA, VL53L0_I2C_SCL);
+DigitalOut xshut(XSHUT_1);
+
+VL53L0X_mbed* g_tof = nullptr;
+
+//*****************************************************************************
+//                                VARIABLES
+//*****************************************************************************
+int state         = 0;
+int score         = 0;
+int offset_posX   = 0;
+int offset_Alpha  = 1;
+
+volatile bool end_match   = false;
+volatile bool start_match = false;
+bool LatchBau = false;
+
+Thread game_thread(osPriorityNormal, 8192);
+Thread endMatch_thread(osPriorityNormal, 512);
+Thread Servo_thread(osPriorityNormal, 512);
+
+//*****************************************************************************
+//                             SENSOR THREAD
+//*****************************************************************************
+void checkSensors()
 {
-    if (channel > 3) return false;
+    //printf("Thread sensor start\r\n");
 
-    char control = 0x04 | channel; // PI4MSD5V9544A / PCA9544A
-    return i2c.write(MUX_ADDR, &control, 1) == 0;
-}
+    i2c.frequency(400000);
 
-bool write_reg(uint8_t reg, uint8_t value)
-{
-    char data[2];
-    data[0] = reg;
-    data[1] = value;
+    ThisThread::sleep_for(10ms);
+    xshut = 1;
+    ThisThread::sleep_for(50ms);
 
-    return i2c.write(TCS_ADDR, data, 2) == 0;
-}
+    g_tof->setTimeout(200);
 
-bool read_reg8(uint8_t reg, uint8_t &value)
-{
-    char r = reg;
-    char v = 0;
+    printf("Init sensor...\r\n");
+    ThisThread::sleep_for(100ms);
 
-    if (i2c.write(TCS_ADDR, &r, 1, true) != 0) return false;
-    if (i2c.read(TCS_ADDR, &v, 1) != 0) return false;
-
-    value = static_cast<uint8_t>(v);
-    return true;
-}
-
-bool read_reg16(uint8_t reg, uint16_t &value)
-{
-    char r = reg;
-    char data[2];
-
-    if (i2c.write(TCS_ADDR, &r, 1, true) != 0) return false;
-    if (i2c.read(TCS_ADDR, data, 2) != 0) return false;
-
-    value = static_cast<uint16_t>(data[0]) |
-            (static_cast<uint16_t>(data[1]) << 8);
-
-    return true;
-}
-
-bool init_tcs()
-{
-    uint8_t id = 0;
-
-    if (!read_reg8(TCS_ID, id)) {
-        return false;
-    }
-
-    if (id != 0x93) {
-        printf("ID inattendu : 0x%02X\r\n", id);
-        return false;
-    }
-
-    // Temps d'intégration environ 50 ms
-    if (!write_reg(TCS_ATIME, 0xEB)) return false;
-
-    // Power ON
-    if (!write_reg(TCS_ENABLE, TCS_PON)) return false;
-    ThisThread::sleep_for(5ms);
-
-    // Power ON + ADC enable
-    if (!write_reg(TCS_ENABLE, TCS_PON | TCS_AEN)) return false;
-    ThisThread::sleep_for(60ms);
-
-    return true;
-}
-
-bool read_color(TcsColor &c)
-{
-    if (!read_reg16(TCS_CDATAL, c.clear)) return false;
-    if (!read_reg16(TCS_RDATAL, c.red)) return false;
-    if (!read_reg16(TCS_GDATAL, c.green)) return false;
-    if (!read_reg16(TCS_BDATAL, c.blue)) return false;
-
-    return true;
-}
-
-bool calibrate_baseline()
-{
-    printf("\r\nCalibration baseline : ne rien mettre devant les capteurs\r\n");
-    ThisThread::sleep_for(1500ms);
-
-    for (uint8_t ch = 0; ch < 4; ch++)
+    if (!g_tof->init())
     {
-        if (!select_mux_channel(ch)) {
-            printf("Canal %d : erreur mux calibration\r\n", ch);
-            baseline_ok[ch] = false;
-            continue;
-        }
-
-        ThisThread::sleep_for(20ms);
-
-        uint32_t sum_c = 0;
-        uint32_t sum_r = 0;
-        uint32_t sum_g = 0;
-        uint32_t sum_b = 0;
-
-        bool ok = true;
-
-        for (int i = 0; i < 10; i++)
+        printf("VL53L0X init failed\r\n");
+        while (true)
         {
-            TcsColor c;
-
-            if (!read_color(c)) {
-                ok = false;
-                break;
-            }
-
-            sum_c += c.clear;
-            sum_r += c.red;
-            sum_g += c.green;
-            sum_b += c.blue;
-
-            ThisThread::sleep_for(60ms);
-        }
-
-        if (!ok) {
-            printf("Canal %d : erreur lecture calibration\r\n", ch);
-            baseline_ok[ch] = false;
-            continue;
-        }
-
-        baseline[ch].clear = sum_c / 10;
-        baseline[ch].red   = sum_r / 10;
-        baseline[ch].green = sum_g / 10;
-        baseline[ch].blue  = sum_b / 10;
-
-        baseline_ok[ch] = true;
-
-        printf("Baseline canal %d : C=%u R=%u G=%u B=%u\r\n",
-               ch,
-               baseline[ch].clear,
-               baseline[ch].red,
-               baseline[ch].green,
-               baseline[ch].blue);
-    }
-
-    printf("Calibration terminee\r\n\r\n");
-    return true;
-}
-
-ColorDetected detect_color(uint8_t ch, const TcsColor &c)
-{
-    if (ch > 3 || !baseline_ok[ch]) {
-        return COLOR_NONE;
-    }
-
-    uint16_t c0 = baseline[ch].clear;
-
-    float r = (float)c.red   / (float)c.clear;
-    float g = (float)c.green / (float)c.clear;
-    float b = (float)c.blue  / (float)c.clear;
-
-    // proximité
-    bool close_blue =
-        c.clear > c0 + 45 &&
-        c.clear > c0 * 1.12f;
-
-    bool close_yellow =
-        c.clear > c0 + 110 &&
-        c.clear > c0 * 1.35f;
-
-    //-------------------------------------------------
-    // BLEU RAL 5017
-    //-------------------------------------------------
-    if (
-        close_blue &&
-        r < 0.34f &&          // peu de rouge
-        b > 0.34f &&          // bleu élevé
-        b > r * 1.35f &&
-        b > g * 1.05f
-    ) {
-        return COLOR_BLUE;
-    }
-
-    //-------------------------------------------------
-    // JAUNE RAL 1023
-    //-------------------------------------------------
-    if (
-        close_yellow &&
-        r > 0.34f &&
-        g > 0.28f &&
-        b < 0.24f &&
-        r > b * 1.60f &&
-        g > b * 1.35f
-    ) {
-        return COLOR_YELLOW;
-    }
-
-    return COLOR_NONE;
-}
-
-const char* color_to_string(ColorDetected color)
-{
-    switch (color) {
-        case COLOR_BLUE:
-            return "BLEU";
-
-        case COLOR_YELLOW:
-            return "JAUNE";
-
-        default:
-            return "RIEN";
-    }
-}
-
-int main()
-{
-    i2c.frequency(100000);
-
-    printf("\r\nInitialisation des 4 TCS34007 via mux\r\n");
-
-    for (uint8_t ch = 0; ch < 4; ch++)
-    {
-        printf("Init capteur canal %d : ", ch);
-
-        if (!select_mux_channel(ch)) {
-            printf("erreur mux\r\n");
-            continue;
-        }
-
-        ThisThread::sleep_for(20ms);
-
-        if (init_tcs()) {
-            printf("OK\r\n");
-        } else {
-            printf("ECHEC\r\n");
+            ThisThread::sleep_for(500ms);
         }
     }
 
-    calibrate_baseline();
-
-    printf("Lecture couleurs\r\n");
+    //printf("Sensor OK\r\n");
 
     while (true)
     {
-        for (uint8_t ch = 0; ch < 4; ch++)
+        if (FsmState == GAME)
         {
-            if (!select_mux_channel(ch)) {
-                printf("Canal %d : erreur mux\r\n", ch);
-                continue;
+            uint16_t distance = g_tof->readRangeSingleMillimeters();
+            if (g_tof->timeoutOccurred() || distance == 65535)
+            {
+                //printf("Read error\r\n");
             }
-
-            ThisThread::sleep_for(10ms);
-
-            TcsColor c;
-
-            if (!read_color(c)) {
-                printf("Canal %d : erreur lecture capteur\r\n", ch);
-                continue;
+            else
+            {
+                //printf("Distance = %u mm\r\n", distance);
+                StopMove = (distance < 100) ? 1 : 0;
+                LedR = StopMove;
+                LedG = StopMove;
+                LedB = StopMove;
             }
+        }
+        ThisThread::sleep_for(50ms);
+    }
+}
 
-            ColorDetected color = detect_color(ch, c);
+//*****************************************************************************
+//                              END MATCH THREAD
+//*****************************************************************************
+void endMatchProcess()
+{
+    ThisThread::sleep_for(STARTMATCH);
+    start_match = true;
+    //printf("Debut du match !\r\n");
+    ThisThread::sleep_for(ENDMATCH - STARTMATCH);
+    end_match = true;
+    //printf("Fin du match !\r\n");
+}
 
-            printf("Canal %d : C=%5u R=%5u G=%5u B=%5u | Base C=%5u -> %s\r\n",
-                   ch,
-                   c.clear,
-                   c.red,
-                   c.green,
-                   c.blue,
-                   baseline[ch].clear,
-                   color_to_string(color));
+//*****************************************************************************
+//                            UTILS FUNCTIONS
+//*****************************************************************************
+float theta2pluse(int theta)
+{
+    return 500.0f + (100.0f / 9.0f) * float(theta);
+}
+
+void printPosition()
+{
+    printf("%f;%f;%f\r\n",
+           RobotDiff.getPositionX(),
+           RobotDiff.getPositionY(),
+           RobotDiff.getAlpha());
+}
+
+//*****************************************************************************
+//                      THREAD AFFICHAGE POSITION
+//*****************************************************************************
+void routineAffichage()
+{
+    while (true)
+    {
+        printPosition();
+        ThisThread::sleep_for(25ms);
+    }
+}
+
+//*****************************************************************************
+//                                DRIVE
+//*****************************************************************************
+void taskDrive()
+{
+//Position team bleu
+#ifdef PAMI_1 
+    RobotDiff.setPosition(2880, 1605, -90, Couleur_Team);
+    RobotDiff.Robotgoto(2702, 1603, 170, Couleur_Team, NORMALSPEED);  // Step 1
+    RobotDiff.Robotgoto(2897, 909, 0, Couleur_Team, NORMALSPEED);  // Step 2
+#endif
+
+#ifdef PAMI_2 
+    RobotDiff.setPosition(2880, 1705, -90, Couleur_Team);
+    RobotDiff.Robotgoto(2725, 1709, 0, Couleur_Team, NORMALSPEED);  // Step 1
+    RobotDiff.Robotgoto(2356, 157, 0, Couleur_Team, NORMALSPEED);  // Step 2
+#endif
+
+#ifdef PAMI_3 
+   // Strategy generated by StrategyEditor
+// Total points: 3
+
+RobotDiff.setPosition(2880, 1805, -90, Couleur_Team);
+RobotDiff.Robotgoto(2719, 1804, 0, Couleur_Team, NORMALSPEED);  // Step 1
+RobotDiff.Robotgoto(2283, 850, 0, Couleur_Team, NORMALSPEED);  // Step 2
+
+#endif
+
+
+
+
+
+
+
+
+
+
+}
+
+//*****************************************************************************
+//                          ACTION SERVO FIN DE MATCH
+//*****************************************************************************
+// Exécute la séquence servo de fin de match.
+// Vérifie le BAU avant chaque étape — si BAU actif, arrêt immédiat.
+void servoFinDeMatch()
+{
+    while (1)
+    {
+        Servo1.pulsewidth_us(theta2pluse(140));
+        ThisThread::sleep_for(400ms);
+        Servo1.pulsewidth_us(theta2pluse(15));
+        ThisThread::sleep_for(800ms);
+    }
+}
+
+//*****************************************************************************
+//                                MAIN FSM
+//*****************************************************************************
+void main_thread(void)
+{
+    FsmState = IDLE;
+
+    Couleur_Team = !SW_team;
+    if (Couleur_Team == false)
+    {
+        // bleu
+        offset_posX  = 0;
+        offset_Alpha = 1;
+        LedR = 0;
+        LedG = 0;
+        LedB = 1;
+    }
+    else
+    {
+        // jaune
+        offset_posX  = 3000;
+        offset_Alpha = -1;
+        LedR = 1;
+        LedG = 1;
+        LedB = 0;
+    }
+
+    while (1)
+    {
+        if (Fin_de_match) FsmState = END;
+
+        switch (FsmState)
+        {
+        case IDLE:
+            if (SW_Tirette == 1 && FsmState != END)
+            {
+                endMatch_thread.start(endMatchProcess);
+                FsmState = WAIT_START;
+            }
+            break;
+
+        case WAIT_START:
+            if (start_match == true) FsmState = GAME;
+            break;
+
+        case GAME:
+            taskDrive();
+            FsmState = END;
+            break;
+
+        case END:
+            break;
+        }
+    }
+}
+
+//*****************************************************************************
+//                                   MAIN
+//*****************************************************************************
+int main()
+{
+#ifdef DEBUG
+    Thread threadAffichage;
+    threadAffichage.start(routineAffichage);
+#endif
+
+    printf("Nucleo ON\r\n");
+
+    SW_team.mode(PullUp);
+    SW_bau.mode(PullUp);
+    SW_Tirette.mode(PullUp);
+
+    LedR = 0;
+    LedG = 0;
+    LedB = 0;
+    Servo1.period_ms(20);
+    Servo1.pulsewidth_us(theta2pluse(30));
+
+    TMCSerial.setup_all_stepper();
+
+    static VL53L0X_mbed tof(i2c);
+    g_tof = &tof;
+
+    sensor_thread.start(mbed::callback(checkSensors));
+    game_thread.start(main_thread);
+
+    while (1)
+    {
+        if(SW_bau != 1 ) LatchBau = true;
+        if ((end_match || LatchBau == true) && (Fin_de_match == false))
+        {
+            Fin_de_match = true;
+            game_thread.terminate();
+            sensor_thread.terminate();
+            RobotDiff.stop();
+            LedR = 1;
+            LedG = 0;
+            LedB = 0;
         }
 
-        printf("----------------------------------------\r\n");
-        ThisThread::sleep_for(500ms);
+         if (Fin_de_match){
+            if(LatchBau == false) Servo_thread.start(servoFinDeMatch);
+            else 
+            {
+                Servo_thread.terminate();
+                Servo1.pulsewidth_us(theta2pluse(15));
+                
+                //Servo1 = 0.0;
+            }
+         }
     }
 }
