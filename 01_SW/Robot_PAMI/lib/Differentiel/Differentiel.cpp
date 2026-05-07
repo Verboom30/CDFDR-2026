@@ -49,7 +49,7 @@ void differentiel::setPosition(int positionX, int positionY, int Alpha, bool tea
     _positionY = positionY;
     _cibleposX = _positionX;
     _cibleposY = _positionY;
-    _Alpha = Alpha;
+    _Alpha =  team == 1  ? (Alpha*-1.0) : Alpha;
     lastPosG = -StepperG->getPosition();
     lastPosD = StepperD->getPosition();
 }

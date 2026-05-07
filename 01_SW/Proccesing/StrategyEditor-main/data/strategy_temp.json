@@ -1,34 +1,20 @@
 {"strategy": [
   {
-    "x_mm": 375,
-    "angleDeg": 180,
+    "x_mm": 2880,
+    "angleDeg": -90,
     "id": 0,
-    "poi": "startYellow",
-    "y_mm": 1775
+    "y_mm": 1805
   },
   {
-    "x_mm": 400,
-    "angleDeg": 180,
+    "x_mm": 2719,
+    "angleDeg": 0,
     "id": 1,
-    "y_mm": 1108
+    "y_mm": 1804
   },
   {
-    "x_mm": 926,
+    "x_mm": 2283,
     "angleDeg": 0,
     "id": 2,
-    "y_mm": 1121
-  },
-  {
-    "x_mm": 876,
-    "angleDeg": 0,
-    "id": 3,
-    "y_mm": 1764
-  },
-  {
-    "x_mm": 375,
-    "angleDeg": 0,
-    "id": 4,
-    "poi": "startYellow",
-    "y_mm": 1775
+    "y_mm": 850
   }
 ]}
