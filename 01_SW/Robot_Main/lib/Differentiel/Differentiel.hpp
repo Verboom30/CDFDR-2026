@@ -1,5 +1,5 @@
-#ifndef HOLONOME_H
-#define HOLONOME_H
+#ifndef DIFFERENTIEL_HPP
+#define DIFFERENTIEL_HPP
 
 #include "mbed.h"
 #include "pinout.hpp"

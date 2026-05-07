@@ -1,100 +1,43 @@
 #include "mbed.h"
-#include "ServoPCA9685.hpp"
+#include "Stepper.hpp"
+#include "Holonome.hpp"
+#include "pinout.hpp"
 
-I2C i2c(PB_9, PB_8);
+Stepper stepA(STEP_A,DIR_A);
+Stepper stepB(STEP_B,DIR_B);
+Stepper stepC(STEP_C,DIR_C);
+DigitalOut En_drive_N(EN_DRIVE_N);
+DigitalOut Led(LIDAR_LED);
 
-ServoPCA9685 servoCard0(i2c, 0x40);
-ServoPCA9685 servoCard1(i2c, 0x41);
-ServoPCA9685 servoCard2(i2c, 0x42);
+DigitalIn SW_Drive(SW_SPARE_1);
+bool stopLidar = false;
 
-void configureCard(ServoPCA9685& card)
-{
-    card.setMirrored(0, false);
-    card.setMirrored(1, true);
-    card.setMirrored(2, false);
-    card.setMirrored(3, true);
-    card.setMirrored(4, false);
-    card.setMirrored(5, false);
-    card.setMirrored(6, true);
-    card.setMirrored(7, false);
-
-    card.setOffset(0, 0.0f);
-    card.setOffset(1, -5.0f);
-    card.setOffset(2, 0.0f);
-    card.setOffset(3, 0.0f);
-    card.setOffset(4, 0.0f);
-    card.setOffset(5, 0.0f);
-    card.setOffset(6, 0.0f);
-    card.setOffset(7, 0.0f);
-}
-
-void applyRobotPose(ServoPCA9685& card)
-{
-    card.setServoAngle(7, 25);
-
-    card.setServoAngle(5, 30);
-
-    card.setServoAngle(4, 50);
-    card.setServoAngle(6, 50);
-
-    card.setServoAngle(0, 90);
-    card.setServoAngle(1, 90);
-    card.setServoAngle(2, 90);
-    card.setServoAngle(3, 90);
-}
-
-
-void Home_Servo()
-{
-    servoCard0.setServoAngle(5, 35);
-    servoCard0.setServoAngle(4, 50); 
-    servoCard0.setServoAngle(6, 50); 
-    servoCard0.setServoAngle(0, 90); 
-    servoCard0.setServoAngle(1, 90); 
-    servoCard0.setServoAngle(2, 90);
-    servoCard0.setServoAngle(3, 90);
-
-    servoCard1.setServoAngle(5, 35);
-    servoCard1.setServoAngle(4, 50); 
-    servoCard1.setServoAngle(6, 50); 
-    servoCard1.setServoAngle(0, 90); 
-    servoCard1.setServoAngle(1, 90); 
-    servoCard1.setServoAngle(2, 90);
-    servoCard1.setServoAngle(3, 90);
-
-    servoCard2.setServoAngle(5, 35);
-    servoCard2.setServoAngle(4, 50); 
-    servoCard2.setServoAngle(6, 50); 
-    servoCard2.setServoAngle(0, 90); 
-    servoCard2.setServoAngle(1, 90); 
-    servoCard2.setServoAngle(2, 90);
-    servoCard2.setServoAngle(3, 90);
-    
-    ThisThread::sleep_for(500ms);
-    servoCard0.setServoAngle(7, 25);
-    servoCard1.setServoAngle(7, 25);
-    servoCard2.setServoAngle(7, 25);
-}
+Holonome robot(&stepA, &stepB, &stepC, &stopLidar);
 
 int main()
 {
-    i2c.frequency(100000);
+    En_drive_N = SW_Drive;
+    Led=! SW_Drive;
+    SW_Drive.mode(PullUp);
+    //robot.run();
 
-    printf("\r\nTest 3 cartes PCA9685\r\n");
+    robot.setPosition(0, 0, 0);
 
-    configureCard(servoCard0);
-    configureCard(servoCard1);
-    configureCard(servoCard2);
+    // déplacement holonome direct :
+    
+     robot.Robotmove(0, 1000, 0);      // +Y
+     
+    // robot.Robotmove(0, 0, 90);       // rotation
 
-    servoCard0.begin();
-    servoCard1.begin();
-    servoCard2.begin();
-    Home_Servo();
-  
+    // // aller à une position :
+    // robot.Robotgoto(1000, 500, 0);
 
-    while (true)
-    {
+    while (true) {
+        printf("X=%.1f Y=%.1f T=%.1f\r\n",
+               robot.getPositionX(),
+               robot.getPositionY(),
+               robot.getTheta());
 
-        
+        ThisThread::sleep_for(500ms);
     }
 }
