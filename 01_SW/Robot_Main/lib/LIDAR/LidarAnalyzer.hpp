@@ -2,11 +2,11 @@
 
 #include "mbed.h"
 #include "lidar.hpp"        // Ton capteur Lidar
-#include "Differentiel.hpp"
+#include "Holonome.hpp"
 
 class LidarAnalyzer {
 public:
-    LidarAnalyzer(Lidar* lidar, differentiel* robot, DigitalOut* status_led);
+    LidarAnalyzer(Lidar* lidar, Holonome* robot, DigitalOut* status_led);
 
     void update();
     bool isObstacleDetected() const;
@@ -22,7 +22,7 @@ private:
 
 
     Lidar* lidar_;
-    differentiel* robot_;
+    Holonome* robot_;
     DigitalOut* led_;
 
     bool stop_;

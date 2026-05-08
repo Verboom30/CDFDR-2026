@@ -8,7 +8,7 @@
 #define LIDAR_PC_ON          5.0f
 
 
-LidarAnalyzer::LidarAnalyzer(Lidar* lidar, differentiel* robot, DigitalOut* status_led)
+LidarAnalyzer::LidarAnalyzer(Lidar* lidar, Holonome* robot, DigitalOut* status_led)
     : lidar_(lidar), robot_(robot), led_(status_led), stop_(false),
       NbDetecLidarPack(0), NbNoDetecLidarPack(0),
       DistanceLidar(0), AngleLidar(0), AngleLidarCible(0), PointLidarX(0), PointLidarY(0)
@@ -25,7 +25,7 @@ void LidarAnalyzer::update() {
 
     float posX   = robot_->getPositionX();
     float posY   = robot_->getPositionY();
-    float alpha  = robot_->getAlpha();
+    float alpha  = robot_->getTheta();
     float cibleX = robot_->getPosCibleX();
     float cibleY = robot_->getPosCibleY();
 
