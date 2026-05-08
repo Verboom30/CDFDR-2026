@@ -1,20 +1,7 @@
-{"strategy": [
-  {
-    "x_mm": 2880,
-    "angleDeg": -90,
-    "id": 0,
-    "y_mm": 1805
-  },
-  {
-    "x_mm": 2719,
-    "angleDeg": 0,
-    "id": 1,
-    "y_mm": 1804
-  },
-  {
-    "x_mm": 2283,
-    "angleDeg": 0,
-    "id": 2,
-    "y_mm": 850
-  }
-]}
+{"strategy": [{
+  "x_mm": 2625,
+  "angleDeg": 0,
+  "id": 0,
+  "poi": "startBlue",
+  "y_mm": 1775
+}]}

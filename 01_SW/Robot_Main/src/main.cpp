@@ -165,11 +165,13 @@ void initSensor()
     lcdStatus("Sensor3", "Calib...");
     sensor3.calibrateBaseline();
 
-    ThisThread::sleep_for(500ms);
+    disable_all_mux();
 }
 
 void ColorDect(TCS34007Mux& arms, TCS34007Mux::ColorResult results[4])
 {
+    disable_all_mux();
+    ThisThread::sleep_for(5ms);
     for (uint8_t ch = 0; ch < 4; ch++)
     {
         results[ch].color = arms.readAndDetect(ch, results[ch].raw);
@@ -182,6 +184,96 @@ void ColorDect(TCS34007Mux& arms, TCS34007Mux::ColorResult results[4])
                results[ch].raw.blue,
                TCS34007Mux::colorToString(results[ch].color));
     }
+}
+
+void Home_Servo()
+{
+    servoCard2.setServoAngle(pince_top, 35);
+
+    servoCard2.setServoAngle(pince_g, 50);
+    servoCard2.setServoAngle(pince_d, 50);
+
+    servoCard2.setServoAngle(pince1, 90);
+    servoCard2.setServoAngle(pince2, 90);
+    servoCard2.setServoAngle(pince3, 90);
+    servoCard2.setServoAngle(pince4, 90);
+
+    ThisThread::sleep_for(500ms);
+
+    servoCard2.setServoAngle(bras, 7);
+}
+
+void ColorDetectTask(uint8_t arm_id)
+{
+    TCS34007Mux* sensor = nullptr;
+    ServoPCA9685* servo = nullptr;
+
+    switch (arm_id)
+    {
+        case 1:
+            sensor = &sensor1;
+            servo  = &servoCard1;
+            break;
+
+        case 2:
+            sensor = &sensor2;
+            servo  = &servoCard2;
+            break;
+
+        case 3:
+            sensor = &sensor3;
+            servo  = &servoCard3;
+            break;
+
+        default:
+            return;
+    }
+
+    ColorDect(*sensor, colorResults);
+
+    for (size_t i = 0; i < 4; i++)
+    {
+        if (colorResults[i].color == TCS34007Mux::COLOR_YELLOW)
+        {
+            servo->setServoAngle(i, 50);
+        }
+        else
+        {
+            servo->setServoAngle(i, 100);
+        }
+    }
+}
+void ColorDetectTask2(uint8_t arm_id){
+
+    TCS34007Mux* sensor = nullptr;
+    ServoPCA9685* servo = nullptr;
+
+    switch (arm_id)
+    {
+        case 1:
+            sensor = &sensor1;
+            servo  = &servoCard1;
+            break;
+
+        case 2:
+            sensor = &sensor2;
+            servo  = &servoCard2;
+            break;
+
+        case 3:
+            sensor = &sensor3;
+            servo  = &servoCard3;
+            break;
+
+        default:
+            return;
+    }
+
+    servo->setServoAngle(pince_top, 15);
+    ThisThread::sleep_for(250ms);
+    servo->setServoAngle(bras, 130);
+    ThisThread::sleep_for(1000ms);
+    Home_Servo();
 }
 
 void configureCard(ServoPCA9685& card)
@@ -203,23 +295,6 @@ void configureCard(ServoPCA9685& card)
     card.setOffset(5, 0.0f);
     card.setOffset(6, 0.0f);
     card.setOffset(7, 0.0f);
-}
-
-void Home_Servo()
-{
-    servoCard2.setServoAngle(pince_top, 35);
-
-    servoCard2.setServoAngle(pince_g, 50);
-    servoCard2.setServoAngle(pince_d, 50);
-
-    servoCard2.setServoAngle(pince1, 90);
-    servoCard2.setServoAngle(pince2, 90);
-    servoCard2.setServoAngle(pince3, 90);
-    servoCard2.setServoAngle(pince4, 90);
-
-    ThisThread::sleep_for(500ms);
-
-    servoCard2.setServoAngle(bras, 18);
 }
 
 void safeStopAll(const char* msg)
@@ -278,6 +353,47 @@ void waitTeamValidation()
     }
 }
 
+
+void Prise_Caise()
+{
+    servoCard2.setServoAngle(bras, 70);
+
+
+    servoCard2.setServoAngle(pince_top, 90);
+    servoCard2.setServoAngle(pince_g,   80); 
+    servoCard2.setServoAngle(pince_d,   80); 
+    servoCard2.setServoAngle(pince1,    60); 
+    servoCard2.setServoAngle(pince2,    60); 
+    servoCard2.setServoAngle(pince3,    60);
+    servoCard2.setServoAngle(pince4,    60);
+    ThisThread::sleep_for(500ms);
+    servoCard2.setServoAngle(bras, 130);
+    ThisThread::sleep_for(250ms);
+    servoCard2.setServoAngle(pince1,    90); 
+    servoCard2.setServoAngle(pince2,    90); 
+    servoCard2.setServoAngle(pince3,    90);
+    servoCard2.setServoAngle(pince4,    90);
+    ThisThread::sleep_for(500ms);
+   
+    servoCard2.setServoAngle(pince_g,   40); 
+    servoCard2.setServoAngle(pince_d,   40); 
+    ThisThread::sleep_for(250ms);
+    servoCard2.setServoAngle(pince_g,   50); 
+    servoCard2.setServoAngle(pince_d,   50); 
+    ThisThread::sleep_for(250ms);
+    servoCard2.setServoAngle(bras, 140);
+    servoCard2.setServoAngle(pince_top, 20);
+    ThisThread::sleep_for(250ms);
+    servoCard2.setServoAngle(pince_g,   35); 
+    servoCard2.setServoAngle(pince_d,   35); 
+    ThisThread::sleep_for(250ms);
+    servoCard2.setServoAngle(bras, 7);
+    ThisThread::sleep_for(1000ms);
+    servoCard2.setServoAngle(pince_g,   50); 
+    servoCard2.setServoAngle(pince_d,   50); 
+    ThisThread::sleep_for(250ms);
+}
+
 void main_thread()
 {
     FsmState = IDLE;
@@ -319,6 +435,13 @@ void main_thread()
             break;
 
         case GAME:
+                Prise_Caise();
+                ThisThread::sleep_for(1000ms);
+                ColorDetectTask(2);
+                ThisThread::sleep_for(1000ms);
+                ColorDetectTask2(2);
+                ThisThread::sleep_for(1000ms);
+                FsmState = END;
             break;
 
         case END:
