@@ -19,8 +19,8 @@
 #define pince3 2
 #define pince4 3
 #define pince_g 4
-#define pince_d 6
 #define pince_top 5
+#define pince_d 6
 #define bras 7
 
 enum {IDLE,START_UP,CAL,WAIT_MATCH,GAME,END}FsmState;  

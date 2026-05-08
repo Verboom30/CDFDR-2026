@@ -186,21 +186,21 @@ void ColorDect(TCS34007Mux& arms, TCS34007Mux::ColorResult results[4])
     }
 }
 
-void Home_Servo()
+void Home_Servo(ServoPCA9685& servo)
 {
-    servoCard2.setServoAngle(pince_top, 35);
+    servo.setServoAngle(pince_top, 35);
 
-    servoCard2.setServoAngle(pince_g, 50);
-    servoCard2.setServoAngle(pince_d, 50);
+    servo.setServoAngle(pince_g, 50);
+    servo.setServoAngle(pince_d, 50);
 
-    servoCard2.setServoAngle(pince1, 90);
-    servoCard2.setServoAngle(pince2, 90);
-    servoCard2.setServoAngle(pince3, 90);
-    servoCard2.setServoAngle(pince4, 90);
+    servo.setServoAngle(pince1, 90);
+    servo.setServoAngle(pince2, 90);
+    servo.setServoAngle(pince3, 90);
+    servo.setServoAngle(pince4, 90);
 
     ThisThread::sleep_for(500ms);
 
-    servoCard2.setServoAngle(bras, 7);
+    servo.setServoAngle(bras, 7);
 }
 
 void ColorDetectTask(uint8_t arm_id)
@@ -233,7 +233,18 @@ void ColorDetectTask(uint8_t arm_id)
 
     for (size_t i = 0; i < 4; i++)
     {
-        if (colorResults[i].color == TCS34007Mux::COLOR_YELLOW)
+        bool goodColor = false;
+
+        if (Couleur_Team == false) // équipe BLEU
+        {
+            goodColor = (colorResults[i].color == TCS34007Mux::COLOR_YELLOW);
+        }
+        else // équipe JAUNE
+        {
+            goodColor = (colorResults[i].color == TCS34007Mux::COLOR_BLUE);
+        }
+
+        if (goodColor)
         {
             servo->setServoAngle(i, 50);
         }
@@ -245,23 +256,18 @@ void ColorDetectTask(uint8_t arm_id)
 }
 void ColorDetectTask2(uint8_t arm_id){
 
-    TCS34007Mux* sensor = nullptr;
     ServoPCA9685* servo = nullptr;
 
     switch (arm_id)
     {
         case 1:
-            sensor = &sensor1;
             servo  = &servoCard1;
             break;
 
         case 2:
-            sensor = &sensor2;
             servo  = &servoCard2;
             break;
-
         case 3:
-            sensor = &sensor3;
             servo  = &servoCard3;
             break;
 
@@ -273,28 +279,48 @@ void ColorDetectTask2(uint8_t arm_id){
     ThisThread::sleep_for(250ms);
     servo->setServoAngle(bras, 130);
     ThisThread::sleep_for(1000ms);
-    Home_Servo();
+    servo->setServoAngle(pince_top, 35);
+    servo->setServoAngle(pince_g, 50);
+    servo->setServoAngle(pince_d, 50);
+    servo->setServoAngle(pince1, 50);
+    servo->setServoAngle(pince2, 50);
+    servo->setServoAngle(pince3, 50);
+    servo->setServoAngle(pince4, 50);
+    ThisThread::sleep_for(500ms);
+    servo->setServoAngle(bras, 7);
+
+    servo->setServoAngle(pince1, 90);
+    servo->setServoAngle(pince2, 90);
+    servo->setServoAngle(pince3, 90);
+    servo->setServoAngle(pince4, 90);
+    
 }
 
-void configureCard(ServoPCA9685& card)
+void configureCard(ServoPCA9685& servo)
 {
-    card.setMirrored(0, false);
-    card.setMirrored(1, true);
-    card.setMirrored(2, false);
-    card.setMirrored(3, true);
-    card.setMirrored(4, false);
-    card.setMirrored(5, false);
-    card.setMirrored(6, true);
-    card.setMirrored(7, false);
+    servo.setMirrored(pince1,    false);
+    servo.setMirrored(pince2,    true);
+    servo.setMirrored(pince3,    false);
+    servo.setMirrored(pince4,    true);
+    servo.setMirrored(pince_g,   false);
+    servo.setMirrored(pince_top, false);
+    servo.setMirrored(pince_d,   true);
+    servo.setMirrored(bras,      false);
 
-    card.setOffset(0, 0.0f);
-    card.setOffset(1, -5.0f);
-    card.setOffset(2, 0.0f);
-    card.setOffset(3, 0.0f);
-    card.setOffset(4, 0.0f);
-    card.setOffset(5, 0.0f);
-    card.setOffset(6, 0.0f);
-    card.setOffset(7, 0.0f);
+}
+
+void configureCardOffsets(ServoPCA9685& servo,
+                          float off0, float off1, float off2, float off3,
+                          float off4, float off5, float off6, float off7)
+{
+    servo.setOffset(pince1,    off0);
+    servo.setOffset(pince2,    off1);
+    servo.setOffset(pince3,    off2);
+    servo.setOffset(pince4,    off3);
+    servo.setOffset(pince_g,   off4);
+    servo.setOffset(pince_top, off5);
+    servo.setOffset(pince_d,   off6);
+    servo.setOffset(bras,      off7);
 }
 
 void safeStopAll(const char* msg)
@@ -354,43 +380,59 @@ void waitTeamValidation()
 }
 
 
-void Prise_Caise()
+void Prise_Caise(uint8_t arm_id)
 {
-    servoCard2.setServoAngle(bras, 70);
 
+    ServoPCA9685* servo = nullptr;
+    switch (arm_id)
+    {
+        case 1:
+            servo  = &servoCard1;
+            break;
 
-    servoCard2.setServoAngle(pince_top, 90);
-    servoCard2.setServoAngle(pince_g,   80); 
-    servoCard2.setServoAngle(pince_d,   80); 
-    servoCard2.setServoAngle(pince1,    60); 
-    servoCard2.setServoAngle(pince2,    60); 
-    servoCard2.setServoAngle(pince3,    60);
-    servoCard2.setServoAngle(pince4,    60);
+        case 2:
+            servo  = &servoCard2;
+            break;
+        case 3:
+            servo  = &servoCard3;
+            break;
+
+        default:
+            return;
+    }
+
+    servo->setServoAngle(bras, 70);
+    servo->setServoAngle(pince_top, 90);
+    servo->setServoAngle(pince_g,   80); 
+    servo->setServoAngle(pince_d,   80); 
+    servo->setServoAngle(pince1,    60); 
+    servo->setServoAngle(pince2,    60); 
+    servo->setServoAngle(pince3,    60);
+    servo->setServoAngle(pince4,    60);
     ThisThread::sleep_for(500ms);
-    servoCard2.setServoAngle(bras, 130);
+    servo->setServoAngle(bras, 130);
     ThisThread::sleep_for(250ms);
-    servoCard2.setServoAngle(pince1,    90); 
-    servoCard2.setServoAngle(pince2,    90); 
-    servoCard2.setServoAngle(pince3,    90);
-    servoCard2.setServoAngle(pince4,    90);
+    servo->setServoAngle(pince1,    90); 
+    servo->setServoAngle(pince2,    90); 
+    servo->setServoAngle(pince3,    90);
+    servo->setServoAngle(pince4,    90);
     ThisThread::sleep_for(500ms);
-   
-    servoCard2.setServoAngle(pince_g,   40); 
-    servoCard2.setServoAngle(pince_d,   40); 
+    servo->setServoAngle(pince_g,   40); 
+    servo->setServoAngle(pince_d,   40); 
     ThisThread::sleep_for(250ms);
-    servoCard2.setServoAngle(pince_g,   50); 
-    servoCard2.setServoAngle(pince_d,   50); 
+    servo->setServoAngle(pince_g,   50); 
+    servo->setServoAngle(pince_d,   50); 
     ThisThread::sleep_for(250ms);
-    servoCard2.setServoAngle(bras, 140);
-    servoCard2.setServoAngle(pince_top, 20);
+    servo->setServoAngle(bras, 140);
+    servo->setServoAngle(pince_top, 20);
     ThisThread::sleep_for(250ms);
-    servoCard2.setServoAngle(pince_g,   35); 
-    servoCard2.setServoAngle(pince_d,   35); 
+    servo->setServoAngle(pince_g,   35); 
+    servo->setServoAngle(pince_d,   35); 
     ThisThread::sleep_for(250ms);
-    servoCard2.setServoAngle(bras, 7);
+    servo->setServoAngle(bras, 7);
     ThisThread::sleep_for(1000ms);
-    servoCard2.setServoAngle(pince_g,   50); 
-    servoCard2.setServoAngle(pince_d,   50); 
+    servo->setServoAngle(pince_g,   50); 
+    servo->setServoAngle(pince_d,   50); 
     ThisThread::sleep_for(250ms);
 }
 
@@ -435,11 +477,11 @@ void main_thread()
             break;
 
         case GAME:
-                Prise_Caise();
+                Prise_Caise(3);
                 ThisThread::sleep_for(1000ms);
-                ColorDetectTask(2);
+                ColorDetectTask(3);
                 ThisThread::sleep_for(1000ms);
-                ColorDetectTask2(2);
+                ColorDetectTask2(3);
                 ThisThread::sleep_for(1000ms);
                 FsmState = END;
             break;
@@ -473,11 +515,31 @@ int main()
     configureCard(servoCard2);
     configureCard(servoCard3);
 
+    // offsets indépendants carte 1
+    configureCardOffsets(servoCard1,
+        0.0f, -5.0f, 0.0f, 0.0f,
+        0.0f,  0.0f, 0.0f, 12.0f
+    );
+
+    // offsets indépendants carte 2
+    configureCardOffsets(servoCard2,
+        0.0f, -5.0f, 0.0f, 0.0f,
+        0.0f,  0.0f, 0.0f, 0.0f
+    );
+
+    // offsets indépendants carte 3
+    configureCardOffsets(servoCard3,
+        0.0f, -5.0f, 0.0f, 0.0f,
+        10.0f, -7.0f,  10.0f, 15.0f
+    );
+
     servoCard1.begin();
     servoCard2.begin();
     servoCard3.begin();
     CheckBauFalse();
-    Home_Servo();
+    Home_Servo(servoCard1);
+    Home_Servo(servoCard2);
+    Home_Servo(servoCard3);
     waitTeamValidation();
 
     initSensor();
