@@ -25,6 +25,11 @@ public:
         uint16_t blue;
     };
 
+     struct ColorResult {
+        ColorDetected color;
+        TcsColor raw;
+    };
+
     TCS34007Mux(I2C& i2c, uint8_t mux_addr_7bit);
 
     bool begin();
