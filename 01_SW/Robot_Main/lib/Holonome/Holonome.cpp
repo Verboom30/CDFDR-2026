@@ -1,44 +1,28 @@
 #include "Holonome.hpp"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846f
+#endif
+
 Holonome::Holonome(Stepper* moteurA, Stepper* moteurB, Stepper* moteurC, bool* StopLidar)
     : StepperA(moteurA),
       StepperB(moteurB),
       StepperC(moteurC),
-      _stopLidar(StopLidar),
-      semA(0),
-      semB(0),
-      semC(0),
-      readyCount(0)
+      _stopLidar(StopLidar)
 {
-    _positionX = 0.0f;
-    _positionY = 0.0f;
-    _cibleposX = 0.0f;
-    _cibleposY = 0.0f;
-    _Theta = 0.0f;
+    _positionX = _positionY = 0;
+    _cibleposX = _cibleposY = 0;
+    _Theta = 0;
 
-    _MoveX = 0.0f;
-    _MoveY = 0.0f;
-    _MoveTheta = 0.0f;
+    _MoveX = _MoveY = _MoveTheta = 0;
+    _SpeedX = _SpeedY = _SpeedTheta = 0;
 
-    _SpeedX = 0.0f;
-    _SpeedY = 0.0f;
-    _SpeedTheta = 0.0f;
+    _SpeedA = _SpeedB = _SpeedC = 0;
+    _StepA = _StepB = _StepC = 0;
 
-    _SpeedA = 0.0f;
-    _SpeedB = 0.0f;
-    _SpeedC = 0.0f;
+    _deltaA = _deltaB = _deltaC = 0;
 
-    _StepA = 0;
-    _StepB = 0;
-    _StepC = 0;
-
-    _deltaA = 0;
-    _deltaB = 0;
-    _deltaC = 0;
-
-    routineA.start(callback(this, &Holonome::routine_moteur_A));
-    routineB.start(callback(this, &Holonome::routine_moteur_B));
-    routineC.start(callback(this, &Holonome::routine_moteur_C));
+    routineMove.start(callback(this, &Holonome::routine_mouvement));
     threadOdometrie.start(callback(this, &Holonome::routine_odometrie));
 
     setPositionZero();
@@ -83,7 +67,7 @@ void Holonome::setPosition(int positionX, int positionY, int theta, bool team)
     _cibleposX = _positionX;
     _cibleposY = _positionY;
 
-    _Theta = theta;
+    _Theta = team ? -theta : theta;
 
     lastPosA = StepperA->getPosition();
     lastPosB = StepperB->getPosition();
@@ -101,9 +85,9 @@ void Holonome::resetPosition()
 {
     ScopedLock<Mutex> lock(mutexData);
 
-    _positionX = 0.0f;
-    _positionY = 0.0f;
-    _Theta = 0.0f;
+    _positionX = 0;
+    _positionY = 0;
+    _Theta = 0;
 
     lastPosA = StepperA->getPosition();
     lastPosB = StepperB->getPosition();
@@ -128,11 +112,14 @@ void Holonome::move(int moveX, int moveY, int moveTheta, float coefSpeed)
 
         float sum = fabsf(_MoveX) + fabsf(_MoveY) + fabsf(_MoveTheta);
 
-        if (sum < 0.001f) {
-            _SpeedX = 0.0f;
-            _SpeedY = 0.0f;
-            _SpeedTheta = 0.0f;
-        } else {
+        if (sum < 0.001f)
+        {
+            _SpeedX = 0;
+            _SpeedY = 0;
+            _SpeedTheta = 0;
+        }
+        else
+        {
             _SpeedX     = (fabsf(_MoveX)     / sum) * SPEED * coefSpeed;
             _SpeedY     = (fabsf(_MoveY)     / sum) * SPEED * coefSpeed;
             _SpeedTheta = (fabsf(_MoveTheta) / sum) * SPEED * 0.5f * coefSpeed;
@@ -141,7 +128,7 @@ void Holonome::move(int moveX, int moveY, int moveTheta, float coefSpeed)
         computeKinematics();
     }
 
-    flags.set(0x1 | 0x2 | 0x4);
+    flags.set(0x1);
 }
 
 void Holonome::computeKinematics()
@@ -194,74 +181,54 @@ void Holonome::computeKinematics()
     if (_SpeedC < 1.0f && _StepC != 0) _SpeedC = 1.0f;
 }
 
-void Holonome::synchroniser()
+void Holonome::routine_mouvement()
 {
-    ScopedLock<Mutex> lock(syncMutex);
-
-    readyCount++;
-
-    if (readyCount == 3) {
-        semA.release();
-        semB.release();
-        semC.release();
-        readyCount = 0;
-    }
-}
-
-void Holonome::routine_moteur_A()
-{
-    while (true) {
+    while (true)
+    {
         flags.wait_any(0x1);
 
-        synchroniser();
-        semA.acquire();
+        float speedA;
+        float speedB;
+        float speedC;
 
-        ScopedLock<Mutex> lock(mutexData);
+        int stepA;
+        int stepB;
+        int stepC;
 
-        StepperA->setSpeed(_SpeedA);
-        StepperA->setAcceleration(_SpeedA / ACC);
-        StepperA->setDeceleration(_SpeedA / DEC);
-        StepperA->move(_StepA);
-    }
-}
+        {
+            ScopedLock<Mutex> lock(mutexData);
 
-void Holonome::routine_moteur_B()
-{
-    while (true) {
-        flags.wait_any(0x2);
+            speedA = _SpeedA;
+            speedB = _SpeedB;
+            speedC = _SpeedC;
 
-        synchroniser();
-        semB.acquire();
+            stepA = _StepA;
+            stepB = _StepB;
+            stepC = _StepC;
+        }
 
-        ScopedLock<Mutex> lock(mutexData);
+        StepperA->setSpeed(speedA);
+        StepperB->setSpeed(speedB);
+        StepperC->setSpeed(speedC);
 
-        StepperB->setSpeed(_SpeedB);
-        StepperB->setAcceleration(_SpeedB / ACC);
-        StepperB->setDeceleration(_SpeedB / DEC);
-        StepperB->move(_StepB);
-    }
-}
+        StepperA->setAcceleration(speedA / ACC);
+        StepperB->setAcceleration(speedB / ACC);
+        StepperC->setAcceleration(speedC / ACC);
 
-void Holonome::routine_moteur_C()
-{
-    while (true) {
-        flags.wait_any(0x4);
+        StepperA->setDeceleration(speedA / DEC);
+        StepperB->setDeceleration(speedB / DEC);
+        StepperC->setDeceleration(speedC / DEC);
 
-        synchroniser();
-        semC.acquire();
-
-        ScopedLock<Mutex> lock(mutexData);
-
-        StepperC->setSpeed(_SpeedC);
-        StepperC->setAcceleration(_SpeedC / ACC);
-        StepperC->setDeceleration(_SpeedC / DEC);
-        StepperC->move(_StepC);
+        StepperA->move(stepA);
+        StepperB->move(stepB);
+        StepperC->move(stepC);
     }
 }
 
 void Holonome::routine_odometrie()
 {
-    while (true) {
+    while (true)
+    {
         updatePosition();
         ThisThread::sleep_for(10ms);
     }
@@ -287,13 +254,6 @@ void Holonome::updatePosition()
     float dB = _deltaB * KSTP;
     float dC = _deltaC * KSTP;
 
-    /*
-        Inverse approximatif compatible avec la cinématique précédente.
-
-        dTheta en radians.
-        dX/dY dans le repère robot.
-    */
-
     float dTheta = -(dA + dB + dC) / (3.0f * RADIUS);
 
     float dX_robot = (-2.0f * dA + dB + dC) / 3.0f;
@@ -315,12 +275,14 @@ void Holonome::Robotmove(int moveX, int moveY, int moveTheta, bool enableLidar, 
 {
     move(moveX, moveY, moveTheta, coefSpeed);
 
-    do {
-        if (enableLidar && _stopLidar != nullptr) {
+    do
+    {
+        if (enableLidar && _stopLidar != nullptr)
+        {
             (*_stopLidar) ? pause() : resume();
         }
 
-        ThisThread::sleep_for(50ms);
+        ThisThread::sleep_for(100ms);
 
     } while (!PosCibleDone());
 }
@@ -339,25 +301,27 @@ void Holonome::Robotgoto(int positionX, int positionY, int theta, bool team, flo
         _cibleposY = targetY;
     }
 
-    int moveX = (int)dx;
-    int moveY = (int)dy;
+    if (dx < 0.1f && dx > -0.1f) dx = 0.0f;
+    if (dy < 0.1f && dy > -0.1f) dy = 0.0f;
 
     float finalTheta = team ? -theta : theta;
     float moveTheta = normalizeAngle(finalTheta - getTheta());
 
-    Robotmove(moveX, moveY, (int)moveTheta, true, coefSpeed);
+    Robotmove((int)dx, (int)dy, (int)moveTheta, true, coefSpeed);
 }
 
 bool Holonome::stopped()
 {
-    return StepperA->stopped() && StepperB->stopped() && StepperC->stopped();
+    return StepperA->stopped() &&
+           StepperB->stopped() &&
+           StepperC->stopped();
 }
 
 bool Holonome::PosCibleDone()
 {
-    return StepperA->getPosCibleDone()
-        && StepperB->getPosCibleDone()
-        && StepperC->getPosCibleDone();
+    return StepperA->getPosCibleDone() &&
+           StepperB->getPosCibleDone() &&
+           StepperC->getPosCibleDone();
 }
 
 float Holonome::getPositionX()
@@ -390,13 +354,35 @@ float Holonome::getPosCibleY()
     return _cibleposY;
 }
 
-float Holonome::getSpeedA() { return StepperA->getSpeed(); }
-float Holonome::getSpeedB() { return StepperB->getSpeed(); }
-float Holonome::getSpeedC() { return StepperC->getSpeed(); }
+float Holonome::getSpeedA()
+{
+    return StepperA->getSpeed();
+}
 
-int Holonome::getPosA() { return StepperA->getPosition(); }
-int Holonome::getPosB() { return StepperB->getPosition(); }
-int Holonome::getPosC() { return StepperC->getPosition(); }
+float Holonome::getSpeedB()
+{
+    return StepperB->getSpeed();
+}
+
+float Holonome::getSpeedC()
+{
+    return StepperC->getSpeed();
+}
+
+int Holonome::getPosA()
+{
+    return StepperA->getPosition();
+}
+
+int Holonome::getPosB()
+{
+    return StepperB->getPosition();
+}
+
+int Holonome::getPosC()
+{
+    return StepperC->getPosition();
+}
 
 int Holonome::getDeltaA()
 {

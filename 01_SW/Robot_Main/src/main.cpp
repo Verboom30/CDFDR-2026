@@ -456,6 +456,11 @@ void main_thread()
             break;
 
         case START_UP:
+            robot.setPosition(0,0,0,false);
+            robot.Robotmove(0,500,0,1);
+            robot.Robotmove(500,0,0,1);
+            robot.Robotmove(0,-500,0,1);
+            robot.Robotmove(-500,0,0,1);
             FsmState = CAL;
             break;
 
@@ -500,7 +505,7 @@ int main()
     threadAffichage.start(routineAffichage);
 #endif
 
-    En_drive_N = 1;
+    En_drive_N = SW_Drive.read();
 
     SW_init.mode(PullUp);
     SW_team.mode(PullUp);
@@ -542,7 +547,7 @@ int main()
     Home_Servo(servoCard3);
     waitTeamValidation();
 
-    initSensor();
+    //initSensor();
 
     printf("\r\nSystem ready\r\n");
 
