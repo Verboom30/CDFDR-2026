@@ -8,8 +8,7 @@
 #include "ColorSensor.hpp"
 #include "lidar.hpp"
 #include "LidarAnalyzer.hpp"
-
-//#define DEBUG
+#define DEBUG
 //#define LIDAR
 
 Stepper stepA(STEP_A, DIR_A);
@@ -457,10 +456,10 @@ void main_thread()
 
         case START_UP:
             robot.setPosition(0,0,0,false);
-            robot.Robotmove(0,500,0,1);
-            robot.Robotmove(500,0,0,1);
-            robot.Robotmove(0,-500,0,1);
-            robot.Robotmove(-500,0,0,1);
+            robot.Robotgoto(0,500,0,false,1);
+            robot.Robotgoto(500,500,0,false,1);
+            robot.Robotgoto(500,0,0,false,1);
+            robot.Robotgoto(0,0,0,false,1);
             FsmState = CAL;
             break;
 
