@@ -6,7 +6,7 @@
 #include "Stepper.hpp"
 #include <cmath>
 
-#define RADIUS       121.0f
+#define RADIUS       135.5f   
 #define RSTEP        198
 #define RWHEEL       27.5f
 #define REDUC        0.5f

@@ -1,7 +1,27 @@
-{"strategy": [{
-  "x_mm": 2625,
-  "angleDeg": 0,
-  "id": 0,
-  "poi": "startBlue",
-  "y_mm": 1775
-}]}
+{"strategy": [
+  {
+    "x_mm": 375,
+    "angleDeg": -179.8303985595703,
+    "id": 0,
+    "poi": "startYellow",
+    "y_mm": 1775
+  },
+  {
+    "x_mm": 297,
+    "angleDeg": 0,
+    "id": 1,
+    "y_mm": 1212
+  },
+  {
+    "x_mm": 1106,
+    "angleDeg": 121.17221069335938,
+    "id": 2,
+    "y_mm": 1051
+  },
+  {
+    "x_mm": 1886,
+    "angleDeg": 0,
+    "id": 3,
+    "y_mm": 1042
+  }
+]}
