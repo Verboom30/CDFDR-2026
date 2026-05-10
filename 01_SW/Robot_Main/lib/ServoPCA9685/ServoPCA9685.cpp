@@ -145,3 +145,29 @@ float ServoPCA9685::applyConfig(uint8_t channel, float angle_deg)
 
     return out;
 }
+
+void ServoPCA9685::releaseServo(uint8_t channel)
+{
+    if (channel >= 16)
+        return;
+
+    // LEDn_ON_L + 4 * channel
+    uint8_t reg = 0x06 + 4 * channel;
+
+    char data[5];
+    data[0] = reg;
+    data[1] = 0x00; // ON_L
+    data[2] = 0x00; // ON_H
+    data[3] = 0x00; // OFF_L
+    data[4] = 0x10; // OFF_H bit 4 = FULL OFF
+
+    _i2c.write(_addr << 1, data, 5);
+}
+
+void ServoPCA9685::releaseAllServos()
+{
+    for (uint8_t ch = 0; ch < 16; ch++)
+    {
+        releaseServo(ch);
+    }
+}

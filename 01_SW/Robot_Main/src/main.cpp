@@ -8,20 +8,14 @@
 #include "ColorSensor.hpp"
 #include "lidar.hpp"
 #include "LidarAnalyzer.hpp"
-#define DEBUG
+//#define DEBUG
 //#define LIDAR
-
-Stepper stepA(STEP_A, DIR_A);
-Stepper stepB(STEP_B, DIR_B);
-Stepper stepC(STEP_C, DIR_C);
-
 DigitalOut En_drive_N(EN_DRIVE_N);
+DigitalOut En_servo_N(ENABLE_SERVO_N);
 
 bool stopLidar = false;
 bool Fin_de_match = false;
 bool Couleur_Team = 0; // false bleu, true jaune
-
-Holonome robot(&stepA, &stepB, &stepC, &stopLidar);
 
 I2C i2c(SDA, SCL);
 
@@ -45,7 +39,7 @@ TCS34007Mux::ColorResult colorResults[4];
 DigitalOut led_lidar(LIDAR_LED);
 
 Lidar* LidarLD19 = new Lidar(LIDAR_TX, LIDAR_RX, 230400);
-LidarAnalyzer LidaRayzer(LidarLD19, &robot, &led_lidar);
+//LidarAnalyzer LidaRayzer(LidarLD19, &robot, &led_lidar);
 
 LCD lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7, LCD16x2);
 
@@ -56,6 +50,7 @@ Timeout endMatch;
 Thread lcd_thread;
 Thread game_thread;
 Thread lidarAnalyzer_thread;
+Thread drive_thread;
 
 #ifdef DEBUG
 Thread threadAffichage;
@@ -70,6 +65,7 @@ void lcdStatus(const char* line1, const char* line2 = "")
     lcd.printf("%s", line2);
 }
 
+
 void endMatchProcess()
 {
     end_match = true;
@@ -77,10 +73,10 @@ void endMatchProcess()
 
 void printPosition()
 {
-    printf("%f;%f;%f\r\n",
-           robot.getPositionX(),
-           robot.getPositionY(),
-           robot.getTheta());
+    // printf("%f;%f;%f\r\n",
+    //        robot.getPositionX(),
+    //        robot.getPositionY(),
+    //        robot.getTheta());
 }
 
 void routineAffichage()
@@ -107,19 +103,19 @@ void print_lcd()
     }
 }
 
-void thread_lidar()
-{
-    while (true)
-    {
-        LidaRayzer.update();
+// void thread_lidar()
+// {
+//     while (true)
+//     {
+//         LidaRayzer.update();
 
-#ifdef LIDAR
-        stopLidar = LidaRayzer.isObstacleDetected();
-#endif
+// #ifdef LIDAR
+//         stopLidar = LidaRayzer.isObstacleDetected();
+// #endif
 
-        ThisThread::sleep_for(5ms);
-    }
-}
+//         ThisThread::sleep_for(5ms);
+//     }
+// }
 
 void disable_all_mux()
 {
@@ -202,7 +198,7 @@ void Home_Servo(ServoPCA9685& servo)
     servo.setServoAngle(bras, 7);
 }
 
-void ColorDetectTask(uint8_t arm_id)
+void DeposeCaise1(uint8_t arm_id)
 {
     TCS34007Mux* sensor = nullptr;
     ServoPCA9685* servo = nullptr;
@@ -253,7 +249,7 @@ void ColorDetectTask(uint8_t arm_id)
         }
     }
 }
-void ColorDetectTask2(uint8_t arm_id){
+void DeposeCaise2(uint8_t arm_id){
 
     ServoPCA9685* servo = nullptr;
 
@@ -277,7 +273,7 @@ void ColorDetectTask2(uint8_t arm_id){
     servo->setServoAngle(pince_top, 15);
     ThisThread::sleep_for(250ms);
     servo->setServoAngle(bras, 130);
-    ThisThread::sleep_for(1000ms);
+    ThisThread::sleep_for(500ms);
     servo->setServoAngle(pince_top, 35);
     servo->setServoAngle(pince_g, 50);
     servo->setServoAngle(pince_d, 50);
@@ -287,7 +283,7 @@ void ColorDetectTask2(uint8_t arm_id){
     servo->setServoAngle(pince4, 50);
     ThisThread::sleep_for(500ms);
     servo->setServoAngle(bras, 7);
-
+    ThisThread::sleep_for(500ms);
     servo->setServoAngle(pince1, 90);
     servo->setServoAngle(pince2, 90);
     servo->setServoAngle(pince3, 90);
@@ -295,6 +291,62 @@ void ColorDetectTask2(uint8_t arm_id){
     
 }
 
+
+void Prise_Caise(uint8_t arm_id)
+{
+
+    ServoPCA9685* servo = nullptr;
+    switch (arm_id)
+    {
+        case 1:
+            servo  = &servoCard1;
+            break;
+
+        case 2:
+            servo  = &servoCard2;
+            break;
+        case 3:
+            servo  = &servoCard3;
+            break;
+
+        default:
+            return;
+    }
+
+    servo->setServoAngle(bras, 70);
+    servo->setServoAngle(pince_top, 90);
+    servo->setServoAngle(pince_g,   80); 
+    servo->setServoAngle(pince_d,   80); 
+    servo->setServoAngle(pince1,    60); 
+    servo->setServoAngle(pince2,    60); 
+    servo->setServoAngle(pince3,    60);
+    servo->setServoAngle(pince4,    60);
+    ThisThread::sleep_for(250ms);
+    servo->setServoAngle(bras, 170);
+    ThisThread::sleep_for(750ms);
+    servo->setServoAngle(pince1,    90); 
+    servo->setServoAngle(pince2,    90); 
+    servo->setServoAngle(pince3,    90);
+    servo->setServoAngle(pince4,    90);
+    ThisThread::sleep_for(500ms);
+    servo->setServoAngle(pince_g,   40); 
+    servo->setServoAngle(pince_d,   40); 
+    ThisThread::sleep_for(250ms);
+    servo->setServoAngle(pince_g,   50); 
+    servo->setServoAngle(pince_d,   50); 
+    ThisThread::sleep_for(250ms);
+    servo->setServoAngle(bras, 180);
+    servo->setServoAngle(pince_top, 20);
+    ThisThread::sleep_for(250ms);
+    servo->setServoAngle(pince_g,   35); 
+    servo->setServoAngle(pince_d,   35); 
+    ThisThread::sleep_for(250ms);
+    servo->setServoAngle(bras, 7);
+    ThisThread::sleep_for(500ms);
+    servo->setServoAngle(pince_g,   50); 
+    servo->setServoAngle(pince_d,   50); 
+    ThisThread::sleep_for(250ms);
+}
 void configureCard(ServoPCA9685& servo)
 {
     servo.setMirrored(pince1,    false);
@@ -325,23 +377,26 @@ void configureCardOffsets(ServoPCA9685& servo,
 void safeStopAll(const char* msg)
 {
     Fin_de_match = true;
-    robot.stop();
+    end_match = true;
     En_drive_N = 1;
+    En_servo_N = 1;
     lcdStatus(msg);
 }
-void CheckBauFalse()
+
+void thread_drive_enable()
 {
     while (true)
     {
-        if(SW_bau.read() == 0){
-            return;
+        if(SW_bau.read() == 1)
+        {    safeStopAll("ARRET URGENCE !");
+           
         }else{
-            lcdStatus("Attention !", "BAU");
+            En_drive_N = SW_Drive.read();
+            En_servo_N = 0;
         }
-        ThisThread::sleep_for(500ms);
+        ThisThread::sleep_for(200ms);
     }
 }
-
 
 void waitTeamValidation()
 {
@@ -379,62 +434,6 @@ void waitTeamValidation()
 }
 
 
-void Prise_Caise(uint8_t arm_id)
-{
-
-    ServoPCA9685* servo = nullptr;
-    switch (arm_id)
-    {
-        case 1:
-            servo  = &servoCard1;
-            break;
-
-        case 2:
-            servo  = &servoCard2;
-            break;
-        case 3:
-            servo  = &servoCard3;
-            break;
-
-        default:
-            return;
-    }
-
-    servo->setServoAngle(bras, 70);
-    servo->setServoAngle(pince_top, 90);
-    servo->setServoAngle(pince_g,   80); 
-    servo->setServoAngle(pince_d,   80); 
-    servo->setServoAngle(pince1,    60); 
-    servo->setServoAngle(pince2,    60); 
-    servo->setServoAngle(pince3,    60);
-    servo->setServoAngle(pince4,    60);
-    ThisThread::sleep_for(500ms);
-    servo->setServoAngle(bras, 130);
-    ThisThread::sleep_for(250ms);
-    servo->setServoAngle(pince1,    90); 
-    servo->setServoAngle(pince2,    90); 
-    servo->setServoAngle(pince3,    90);
-    servo->setServoAngle(pince4,    90);
-    ThisThread::sleep_for(500ms);
-    servo->setServoAngle(pince_g,   40); 
-    servo->setServoAngle(pince_d,   40); 
-    ThisThread::sleep_for(250ms);
-    servo->setServoAngle(pince_g,   50); 
-    servo->setServoAngle(pince_d,   50); 
-    ThisThread::sleep_for(250ms);
-    servo->setServoAngle(bras, 140);
-    servo->setServoAngle(pince_top, 20);
-    ThisThread::sleep_for(250ms);
-    servo->setServoAngle(pince_g,   35); 
-    servo->setServoAngle(pince_d,   35); 
-    ThisThread::sleep_for(250ms);
-    servo->setServoAngle(bras, 7);
-    ThisThread::sleep_for(1000ms);
-    servo->setServoAngle(pince_g,   50); 
-    servo->setServoAngle(pince_d,   50); 
-    ThisThread::sleep_for(250ms);
-}
-
 void main_thread()
 {
     FsmState = IDLE;
@@ -455,11 +454,7 @@ void main_thread()
             break;
 
         case START_UP:
-            robot.setPosition(0,0,0,false);
-            robot.Robotgoto(0,500,0,false,1);
-            robot.Robotgoto(500,500,0,false,1);
-            robot.Robotgoto(500,0,0,false,1);
-            robot.Robotgoto(0,0,0,false,1);
+          
             FsmState = CAL;
             break;
 
@@ -483,9 +478,9 @@ void main_thread()
         case GAME:
                 Prise_Caise(3);
                 ThisThread::sleep_for(1000ms);
-                ColorDetectTask(3);
+                DeposeCaise1(3);
                 ThisThread::sleep_for(1000ms);
-                ColorDetectTask2(3);
+                DeposeCaise2(3);
                 ThisThread::sleep_for(1000ms);
                 FsmState = END;
             break;
@@ -504,7 +499,7 @@ int main()
     threadAffichage.start(routineAffichage);
 #endif
 
-    En_drive_N = SW_Drive.read();
+    drive_thread.start(thread_drive_enable);
 
     SW_init.mode(PullUp);
     SW_team.mode(PullUp);
@@ -540,13 +535,12 @@ int main()
     servoCard1.begin();
     servoCard2.begin();
     servoCard3.begin();
-    CheckBauFalse();
     Home_Servo(servoCard1);
     Home_Servo(servoCard2);
     Home_Servo(servoCard3);
     waitTeamValidation();
 
-    //initSensor();
+    initSensor();
 
     printf("\r\nSystem ready\r\n");
 
@@ -559,18 +553,11 @@ int main()
     {
         if (!Fin_de_match)
         {
-            En_drive_N = SW_Drive.read();
-
             if (end_match)
             {
                 safeStopAll("END TIMEOUT !");
             }
-            else if (SW_bau.read() == 1)
-            {
-                safeStopAll("ARRET URGENCE !");
-            }
         }
-
-        ThisThread::sleep_for(20ms);
+        ThisThread::sleep_for(1s);
     }
 }

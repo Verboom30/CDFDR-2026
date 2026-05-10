@@ -18,6 +18,10 @@ public:
     void setServoAngle(uint8_t channel, float angle_deg);
     void setAllAngle(float angle_deg);
 
+    void releaseServo(uint8_t channel);
+    void releaseAllServos();
+    
+
 private:
     static constexpr uint8_t MODE1     = 0x00;
     static constexpr uint8_t MODE2     = 0x01;

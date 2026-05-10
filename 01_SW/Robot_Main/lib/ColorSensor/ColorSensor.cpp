@@ -43,12 +43,12 @@ bool TCS34007Mux::begin()
 bool TCS34007Mux::calibrateBaseline()
 {
     printf("\r\n=== CALIBRATION BASELINE (rien devant) ===\r\n");
-    ThisThread::sleep_for(1500ms);
+    ThisThread::sleep_for(50ms);
 
     for (uint8_t ch = 0; ch < 4; ch++)
     {
         selectChannel(ch);
-        ThisThread::sleep_for(20ms);
+        ThisThread::sleep_for(10ms);
 
         uint32_t sum = 0;
 
@@ -57,7 +57,7 @@ bool TCS34007Mux::calibrateBaseline()
             TcsColor c;
             readColorRaw(c);
             sum += c.clear;
-            ThisThread::sleep_for(50ms);
+            ThisThread::sleep_for(10ms);
         }
 
         _baseline[ch].clear = sum / 10;
@@ -72,7 +72,7 @@ bool TCS34007Mux::calibrateBaseline()
 bool TCS34007Mux::calibrateYellow()
 {
     printf("\r\n=== CALIBRATION JAUNE ===\r\n");
-    ThisThread::sleep_for(2000ms);
+    ThisThread::sleep_for(100ms);
 
     for (uint8_t ch = 0; ch < 4; ch++)
     {
