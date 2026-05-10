@@ -120,6 +120,34 @@ void thread_lidar()
     }
 }
 
+// --- Debug position robot / lidar ---
+void printPosition()
+{
+    CommandAsserv::BroadcastData data = asserv.getBroadcast();
+
+    /*
+     * Debug simple Processing
+     * Format :
+     * X ; Y ; Alpha
+     */
+    printf("%d;%d;%d\r\n",
+           data.x,
+           data.y,
+           data.alpha);
+
+}
+
+
+// --- Thread d'affichage position ---
+void routineAffichage()
+{
+    while (true)
+    {
+        printPosition();
+        ThisThread::sleep_for(100ms);
+    }
+}
+
 void disable_all_mux()
 {
     sensor1.disable();
@@ -473,9 +501,6 @@ void main_thread()
                 asserv.goTo(500, 300);
 
                 Prise_Caise(3);
-
-                asserv.move(200, 0);
-
                 DeposeCaise1(3);
                 ThisThread::sleep_for(1000ms);
 
@@ -566,6 +591,6 @@ int main()
             }
         }
 
-        ThisThread::sleep_for(100ms);
+        ThisThread::sleep_for(1s);
     }
 }
