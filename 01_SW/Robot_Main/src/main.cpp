@@ -1,4 +1,6 @@
 #include "mbed.h"
+#include "Stepper.hpp"
+#include "Holonome.hpp"
 #include "pinout.hpp"
 #include "lcd.hpp"
 #include "ServoPCA9685.hpp"
@@ -6,16 +8,14 @@
 #include "ColorSensor.hpp"
 #include "lidar.hpp"
 #include "LidarAnalyzer.hpp"
-#include "CommandAsserv.hpp"
-
 //#define DEBUG
-#define LIDAR
-
+//#define LIDAR
 DigitalOut En_drive_N(EN_DRIVE_N);
 DigitalOut En_servo_N(ENABLE_SERVO_N);
 
+bool stopLidar = false;
 bool Fin_de_match = false;
-bool Couleur_Team = false;
+bool Couleur_Team = 0; // false bleu, true jaune
 
 I2C i2c(SDA, SCL);
 
@@ -38,10 +38,8 @@ TCS34007Mux::ColorResult colorResults[4];
 
 DigitalOut led_lidar(LIDAR_LED);
 
-CommandAsserv asserv(UART_TX, UART_RX, 115200);
-
 Lidar* LidarLD19 = new Lidar(LIDAR_TX, LIDAR_RX, 230400);
-LidarAnalyzer LidaRayzer(LidarLD19, &asserv, &led_lidar);
+//LidarAnalyzer LidaRayzer(LidarLD19, &robot, &led_lidar);
 
 LCD lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7, LCD16x2);
 
@@ -51,9 +49,8 @@ Timeout endMatch;
 
 Thread lcd_thread;
 Thread game_thread;
-Thread drive_thread;
 Thread lidarAnalyzer_thread;
-Thread broadcast_thread;
+Thread drive_thread;
 
 #ifdef DEBUG
 Thread threadAffichage;
@@ -68,9 +65,27 @@ void lcdStatus(const char* line1, const char* line2 = "")
     lcd.printf("%s", line2);
 }
 
+
 void endMatchProcess()
 {
     end_match = true;
+}
+
+void printPosition()
+{
+    // printf("%f;%f;%f\r\n",
+    //        robot.getPositionX(),
+    //        robot.getPositionY(),
+    //        robot.getTheta());
+}
+
+void routineAffichage()
+{
+    while (true)
+    {
+        printPosition();
+        ThisThread::sleep_for(100ms);
+    }
 }
 
 void print_lcd()
@@ -88,65 +103,19 @@ void print_lcd()
     }
 }
 
-void thread_broadcast()
-{
-    while (true)
-    {
-        CommandAsserv::BroadcastData data = asserv.getBroadcast();
+// void thread_lidar()
+// {
+//     while (true)
+//     {
+//         LidaRayzer.update();
 
-        if (data.valid)
-        {
-            printf("ASSERV X=%d Y=%d A=%d VX=%d VY=%d VA=%d\r\n",
-                   data.x,
-                   data.y,
-                   data.alpha,
-                   data.vx,
-                   data.vy,
-                   data.valpha);
-        }
+// #ifdef LIDAR
+//         stopLidar = LidaRayzer.isObstacleDetected();
+// #endif
 
-        ThisThread::sleep_for(100ms);
-    }
-}
-
-void thread_lidar()
-{
-    while (true)
-    {
-#ifdef LIDAR
-        LidaRayzer.update();
-#endif
-        ThisThread::sleep_for(5ms);
-    }
-}
-
-// --- Debug position robot / lidar ---
-void printPosition()
-{
-    CommandAsserv::BroadcastData data = asserv.getBroadcast();
-
-    /*
-     * Debug simple Processing
-     * Format :
-     * X ; Y ; Alpha
-     */
-    printf("%d;%d;%d\r\n",
-           data.x,
-           data.y,
-           data.alpha);
-
-}
-
-
-// --- Thread d'affichage position ---
-void routineAffichage()
-{
-    while (true)
-    {
-        printPosition();
-        ThisThread::sleep_for(100ms);
-    }
-}
+//         ThisThread::sleep_for(5ms);
+//     }
+// }
 
 void disable_all_mux()
 {
@@ -165,26 +134,32 @@ void initSensor()
 
     lcdStatus("Sensor1", "Init...");
     sensor1.begin();
+
     disable_all_mux();
 
     lcdStatus("Sensor2", "Init...");
     sensor2.begin();
+
     disable_all_mux();
 
     lcdStatus("Sensor3", "Init...");
     sensor3.begin();
+
     disable_all_mux();
 
     lcdStatus("Sensor1", "Calib...");
     sensor1.calibrateBaseline();
+
     disable_all_mux();
 
     lcdStatus("Sensor2", "Calib...");
     sensor2.calibrateBaseline();
+
     disable_all_mux();
 
     lcdStatus("Sensor3", "Calib...");
     sensor3.calibrateBaseline();
+
     disable_all_mux();
 }
 
@@ -192,7 +167,6 @@ void ColorDect(TCS34007Mux& arms, TCS34007Mux::ColorResult results[4])
 {
     disable_all_mux();
     ThisThread::sleep_for(5ms);
-
     for (uint8_t ch = 0; ch < 4; ch++)
     {
         results[ch].color = arms.readAndDetect(ch, results[ch].raw);
@@ -210,6 +184,7 @@ void ColorDect(TCS34007Mux& arms, TCS34007Mux::ColorResult results[4])
 void Home_Servo(ServoPCA9685& servo)
 {
     servo.setServoAngle(pince_top, 35);
+
     servo.setServoAngle(pince_g, 50);
     servo.setServoAngle(pince_d, 50);
 
@@ -230,10 +205,23 @@ void DeposeCaise1(uint8_t arm_id)
 
     switch (arm_id)
     {
-        case 1: sensor = &sensor1; servo = &servoCard1; break;
-        case 2: sensor = &sensor2; servo = &servoCard2; break;
-        case 3: sensor = &sensor3; servo = &servoCard3; break;
-        default: return;
+        case 1:
+            sensor = &sensor1;
+            servo  = &servoCard1;
+            break;
+
+        case 2:
+            sensor = &sensor2;
+            servo  = &servoCard2;
+            break;
+
+        case 3:
+            sensor = &sensor3;
+            servo  = &servoCard3;
+            break;
+
+        default:
+            return;
     }
 
     ColorDect(*sensor, colorResults);
@@ -242,183 +230,172 @@ void DeposeCaise1(uint8_t arm_id)
     {
         bool goodColor = false;
 
-        if (Couleur_Team == false)
+        if (Couleur_Team == false) // équipe BLEU
+        {
             goodColor = (colorResults[i].color == TCS34007Mux::COLOR_YELLOW);
-        else
+        }
+        else // équipe JAUNE
+        {
             goodColor = (colorResults[i].color == TCS34007Mux::COLOR_BLUE);
+        }
 
-        servo->setServoAngle(i, goodColor ? 50 : 100);
+        if (goodColor)
+        {
+            servo->setServoAngle(i, 50);
+        }
+        else
+        {
+            servo->setServoAngle(i, 100);
+        }
     }
 }
+void DeposeCaise2(uint8_t arm_id){
 
-void DeposeCaise2(uint8_t arm_id)
-{
     ServoPCA9685* servo = nullptr;
 
     switch (arm_id)
     {
-        case 1: servo = &servoCard1; break;
-        case 2: servo = &servoCard2; break;
-        case 3: servo = &servoCard3; break;
-        default: return;
+        case 1:
+            servo  = &servoCard1;
+            break;
+
+        case 2:
+            servo  = &servoCard2;
+            break;
+        case 3:
+            servo  = &servoCard3;
+            break;
+
+        default:
+            return;
     }
 
     servo->setServoAngle(pince_top, 15);
     ThisThread::sleep_for(250ms);
-
     servo->setServoAngle(bras, 130);
     ThisThread::sleep_for(500ms);
-
     servo->setServoAngle(pince_top, 35);
     servo->setServoAngle(pince_g, 50);
     servo->setServoAngle(pince_d, 50);
-
     servo->setServoAngle(pince1, 50);
     servo->setServoAngle(pince2, 50);
     servo->setServoAngle(pince3, 50);
     servo->setServoAngle(pince4, 50);
-
     ThisThread::sleep_for(500ms);
-
     servo->setServoAngle(bras, 7);
     ThisThread::sleep_for(500ms);
-
     servo->setServoAngle(pince1, 90);
     servo->setServoAngle(pince2, 90);
     servo->setServoAngle(pince3, 90);
     servo->setServoAngle(pince4, 90);
+    
 }
+
 
 void Prise_Caise(uint8_t arm_id)
 {
-    ServoPCA9685* servo = nullptr;
 
+    ServoPCA9685* servo = nullptr;
     switch (arm_id)
     {
-        case 1: servo = &servoCard1; break;
-        case 2: servo = &servoCard2; break;
-        case 3: servo = &servoCard3; break;
-        default: return;
+        case 1:
+            servo  = &servoCard1;
+            break;
+
+        case 2:
+            servo  = &servoCard2;
+            break;
+        case 3:
+            servo  = &servoCard3;
+            break;
+
+        default:
+            return;
     }
 
     servo->setServoAngle(bras, 70);
     servo->setServoAngle(pince_top, 90);
-    servo->setServoAngle(pince_g, 80);
-    servo->setServoAngle(pince_d, 80);
-
-    servo->setServoAngle(pince1, 60);
-    servo->setServoAngle(pince2, 60);
-    servo->setServoAngle(pince3, 60);
-    servo->setServoAngle(pince4, 60);
-
+    servo->setServoAngle(pince_g,   80); 
+    servo->setServoAngle(pince_d,   80); 
+    servo->setServoAngle(pince1,    60); 
+    servo->setServoAngle(pince2,    60); 
+    servo->setServoAngle(pince3,    60);
+    servo->setServoAngle(pince4,    60);
     ThisThread::sleep_for(250ms);
-
     servo->setServoAngle(bras, 170);
     ThisThread::sleep_for(750ms);
-
-    servo->setServoAngle(pince1, 90);
-    servo->setServoAngle(pince2, 90);
-    servo->setServoAngle(pince3, 90);
-    servo->setServoAngle(pince4, 90);
-
+    servo->setServoAngle(pince1,    90); 
+    servo->setServoAngle(pince2,    90); 
+    servo->setServoAngle(pince3,    90);
+    servo->setServoAngle(pince4,    90);
     ThisThread::sleep_for(500ms);
-
-    servo->setServoAngle(pince_g, 40);
-    servo->setServoAngle(pince_d, 40);
+    servo->setServoAngle(pince_g,   40); 
+    servo->setServoAngle(pince_d,   40); 
     ThisThread::sleep_for(250ms);
-
-    servo->setServoAngle(pince_g, 50);
-    servo->setServoAngle(pince_d, 50);
+    servo->setServoAngle(pince_g,   50); 
+    servo->setServoAngle(pince_d,   50); 
     ThisThread::sleep_for(250ms);
-
     servo->setServoAngle(bras, 180);
-    servo->setServoAngle(pince_top, 20);
-    ThisThread::sleep_for(250ms);
-
-    servo->setServoAngle(pince_g, 35);
-    servo->setServoAngle(pince_d, 35);
-    ThisThread::sleep_for(250ms);
-
+    servo->setServoAngle(pince_top, 15);
+    ThisThread::sleep_for(500ms);
+    servo->setServoAngle(pince_g,   35); 
+    servo->setServoAngle(pince_d,   35); 
+    ThisThread::sleep_for(500ms);
     servo->setServoAngle(bras, 7);
     ThisThread::sleep_for(500ms);
-
-    servo->setServoAngle(pince_g, 50);
-    servo->setServoAngle(pince_d, 50);
+    servo->setServoAngle(pince_top, 20);
+    servo->setServoAngle(pince_g,   50); 
+    servo->setServoAngle(pince_d,   50); 
     ThisThread::sleep_for(250ms);
 }
-
 void configureCard(ServoPCA9685& servo)
 {
-    servo.setMirrored(pince1, false);
-    servo.setMirrored(pince2, true);
-    servo.setMirrored(pince3, false);
-    servo.setMirrored(pince4, true);
-
-    servo.setMirrored(pince_g, false);
+    servo.setMirrored(pince1,    false);
+    servo.setMirrored(pince2,    true);
+    servo.setMirrored(pince3,    false);
+    servo.setMirrored(pince4,    true);
+    servo.setMirrored(pince_g,   false);
     servo.setMirrored(pince_top, false);
-    servo.setMirrored(pince_d, true);
-    servo.setMirrored(bras, false);
+    servo.setMirrored(pince_d,   true);
+    servo.setMirrored(bras,      false);
+
 }
 
 void configureCardOffsets(ServoPCA9685& servo,
                           float off0, float off1, float off2, float off3,
                           float off4, float off5, float off6, float off7)
 {
-    servo.setOffset(pince1, off0);
-    servo.setOffset(pince2, off1);
-    servo.setOffset(pince3, off2);
-    servo.setOffset(pince4, off3);
-    servo.setOffset(pince_g, off4);
+    servo.setOffset(pince1,    off0);
+    servo.setOffset(pince2,    off1);
+    servo.setOffset(pince3,    off2);
+    servo.setOffset(pince4,    off3);
+    servo.setOffset(pince_g,   off4);
     servo.setOffset(pince_top, off5);
-    servo.setOffset(pince_d, off6);
-    servo.setOffset(bras, off7);
+    servo.setOffset(pince_d,   off6);
+    servo.setOffset(bras,      off7);
 }
 
 void safeStopAll(const char* msg)
 {
-    if (Fin_de_match)
-        return;
-
     Fin_de_match = true;
     end_match = true;
-
-    asserv.stop();
-
     En_drive_N = 1;
     En_servo_N = 1;
-
     lcdStatus(msg);
 }
 
 void thread_drive_enable()
 {
-    bool lastDriveState = true;
-
     while (true)
     {
-        if (SW_bau.read() == 1)
-        {
-            safeStopAll("ARRET URGENCE !");
-        }
-        else if (!Fin_de_match)
-        {
-            bool driveOff = SW_Drive.read();
-
-            En_drive_N = driveOff;
+        if(SW_bau.read() == 1)
+        {    safeStopAll("ARRET URGENCE !");
+           
+        }else{
+            En_drive_N = SW_Drive.read();
             En_servo_N = 0;
-
-            if (driveOff != lastDriveState)
-            {
-                if (driveOff)
-                    asserv.pause();
-                else
-                    asserv.resume();
-
-                lastDriveState = driveOff;
-            }
         }
-
-        ThisThread::sleep_for(20ms);
+        ThisThread::sleep_for(200ms);
     }
 }
 
@@ -444,7 +421,9 @@ void waitTeamValidation()
                        Couleur_Team ? "JAUNE" : "BLEU");
 
                 while (SW_init.read() == 0)
+                {
                     ThisThread::sleep_for(20ms);
+                }
 
                 ThisThread::sleep_for(500ms);
                 return;
@@ -454,6 +433,7 @@ void waitTeamValidation()
         ThisThread::sleep_for(100ms);
     }
 }
+
 
 void main_thread()
 {
@@ -466,51 +446,48 @@ void main_thread()
     {
         switch (FsmState)
         {
-            case IDLE:
-                if (SW_init != 1)
-                {
-                    lcdStatus("Start Up !");
-                    FsmState = START_UP;
-                }
-                break;
+        case IDLE:
+            if (SW_init != 1)
+            {
+                lcdStatus("Start Up !");
+                FsmState = START_UP;
+            }
+            break;
 
-            case START_UP:
-                FsmState = CAL;
-                break;
+        case START_UP:
+          
+            FsmState = CAL;
+            break;
 
-            case CAL:
-                lcdStatus("Wait Match !");
-                FsmState = WAIT_MATCH;
-                break;
+        case CAL:
+            lcdStatus("Wait Match !");
+            FsmState = WAIT_MATCH;
+            break;
 
-            case WAIT_MATCH:
-                if (SW_Tirette == 1)
-                {
-                    endMatch.attach(endMatchProcess, 100s);
-                    lcdStatus("GAME!");
+        case WAIT_MATCH:
+            if (SW_Tirette == 1)
+            {
+                endMatch.attach(endMatchProcess, 100s);
+                lcdStatus("GAME!");
 
-                    lcd_thread.start(print_lcd);
+                lcd_thread.start(print_lcd);
 
-                    FsmState = GAME;
-                }
-                break;
+                FsmState = GAME;
+            }
+            break;
 
-            case GAME:
-                asserv.setPosition(0, 0, 0);
-
-                asserv.goTo(500, 300);
-
+        case GAME:
                 Prise_Caise(3);
+                ThisThread::sleep_for(1000ms);
                 DeposeCaise1(3);
                 ThisThread::sleep_for(1000ms);
-
                 DeposeCaise2(3);
-
+                ThisThread::sleep_for(1000ms);
                 FsmState = END;
-                break;
+            break;
 
-            case END:
-                break;
+        case END:
+            break;
         }
 
         ThisThread::sleep_for(20ms);
@@ -523,8 +500,7 @@ int main()
     threadAffichage.start(routineAffichage);
 #endif
 
-    En_drive_N = 1;
-    En_servo_N = 1;
+    drive_thread.start(thread_drive_enable);
 
     SW_init.mode(PullUp);
     SW_team.mode(PullUp);
@@ -533,53 +509,46 @@ int main()
     SW_Drive.mode(PullUp);
     SW_Stepper.mode(PullUp);
 
-    drive_thread.start(thread_drive_enable);
-
     i2c.frequency(100000);
 
     configureCard(servoCard1);
     configureCard(servoCard2);
     configureCard(servoCard3);
 
+    // offsets indépendants carte 1
     configureCardOffsets(servoCard1,
         0.0f, -5.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 12.0f
+        0.0f,  0.0f, 0.0f, 12.0f
     );
 
+    // offsets indépendants carte 2
     configureCardOffsets(servoCard2,
         0.0f, -5.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f
+        0.0f,  0.0f, 0.0f, 0.0f
     );
 
+    // offsets indépendants carte 3
     configureCardOffsets(servoCard3,
         0.0f, -5.0f, 0.0f, 0.0f,
-        10.0f, -7.0f, 10.0f, 15.0f
+        10.0f, -7.0f,  10.0f, 15.0f
     );
 
     servoCard1.begin();
     servoCard2.begin();
     servoCard3.begin();
-
-    En_servo_N = 0;
-
     Home_Servo(servoCard1);
     Home_Servo(servoCard2);
     Home_Servo(servoCard3);
-
     waitTeamValidation();
 
     initSensor();
-
-    asserv.setPosition(0, 0, 0);
-    asserv.enableBroadcast();
-
-    lidarAnalyzer_thread.start(thread_lidar);
-    broadcast_thread.start(thread_broadcast);
 
     printf("\r\nSystem ready\r\n");
 
     lcd.cls();
     game_thread.start(main_thread);
+
+    // lidarAnalyzer_thread.start(thread_lidar);
 
     while (true)
     {
@@ -590,7 +559,6 @@ int main()
                 safeStopAll("END TIMEOUT !");
             }
         }
-
         ThisThread::sleep_for(1s);
     }
 }
