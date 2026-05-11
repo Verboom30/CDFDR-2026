@@ -130,7 +130,7 @@ void Holonome::move(int moveX, int moveY, int moveTheta, float coefSpeed)
         {
             _SpeedX     = (fabsf(_MoveX)     / sum) * SPEED * coefSpeed;
             _SpeedY     = (fabsf(_MoveY)     / sum) * SPEED * coefSpeed;
-            _SpeedTheta = (fabsf(_MoveTheta) / sum) * SPEED * 0.5f * coefSpeed;
+            _SpeedTheta = (fabsf(_MoveTheta) / sum) * SPEED * (1.2f/RADIUS) * coefSpeed;
         }
 
         computeKinematics();
