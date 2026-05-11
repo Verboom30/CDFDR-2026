@@ -137,12 +137,33 @@ void checkSensors()
 //*****************************************************************************
 void endMatchProcess()
 {
-    ThisThread::sleep_for(STARTMATCH);
+
+#ifdef PAMI_1 
+   ThisThread::sleep_for(STARTMATCH);
     start_match = true;
     //printf("Debut du match !\r\n");
     ThisThread::sleep_for(ENDMATCH - STARTMATCH);
     end_match = true;
-    //printf("Fin du match !\r\n");
+#endif
+
+#ifdef PAMI_2 
+    ThisThread::sleep_for(STARTMATCH + 4s);
+     start_match = true;
+    //printf("Debut du match !\r\n");
+    ThisThread::sleep_for(ENDMATCH - STARTMATCH- 4s);
+    end_match = true;
+#endif
+
+#ifdef PAMI_3 
+    ThisThread::sleep_for(STARTMATCH + 8s);
+     start_match = true;
+    //printf("Debut du match !\r\n");
+    ThisThread::sleep_for(ENDMATCH - STARTMATCH - 8s);
+    end_match = true;
+#endif
+
+   
+  
 }
 
 //*****************************************************************************
@@ -181,13 +202,13 @@ void taskDrive()
 //Position team bleu
 #ifdef PAMI_1 
     RobotDiff.setPosition(2880, 1605, -90, Couleur_Team);
-    RobotDiff.Robotgoto(2702, 1603, 170, Couleur_Team, NORMALSPEED);  // Step 1
+    RobotDiff.Robotgoto(2652, 1605, 170, Couleur_Team, NORMALSPEED);  // Step 1
     RobotDiff.Robotgoto(2897, 909, 0, Couleur_Team, NORMALSPEED);  // Step 2
 #endif
 
 #ifdef PAMI_2 
     RobotDiff.setPosition(2880, 1705, -90, Couleur_Team);
-    RobotDiff.Robotgoto(2725, 1709, 0, Couleur_Team, NORMALSPEED);  // Step 1
+    RobotDiff.Robotgoto(2625, 1709, 0, Couleur_Team, NORMALSPEED);  // Step 1
     RobotDiff.Robotgoto(2356, 157, 0, Couleur_Team, NORMALSPEED);  // Step 2
 #endif
 
@@ -221,10 +242,18 @@ void servoFinDeMatch()
 {
     while (1)
     {
-        Servo1.pulsewidth_us(theta2pluse(140));
-        ThisThread::sleep_for(400ms);
-        Servo1.pulsewidth_us(theta2pluse(15));
-        ThisThread::sleep_for(800ms);
+        #ifndef PAMI_3 
+            Servo1.pulsewidth_us(theta2pluse(140));
+            ThisThread::sleep_for(400ms);
+            Servo1.pulsewidth_us(theta2pluse(15));
+            ThisThread::sleep_for(800ms);
+        #endif
+        #ifdef PAMI_3 
+            Servo1.pulsewidth_us(theta2pluse(140));
+            ThisThread::sleep_for(400ms);
+            Servo1.pulsewidth_us(theta2pluse(5));
+            ThisThread::sleep_for(800ms);
+        #endif
     }
 }
 
@@ -304,7 +333,13 @@ int main()
     LedG = 0;
     LedB = 0;
     Servo1.period_ms(20);
-    Servo1.pulsewidth_us(theta2pluse(30));
+    #ifndef PAMI_3 
+        Servo1.pulsewidth_us(theta2pluse(30));
+    #endif
+    #ifdef PAMI_3 
+        Servo1.pulsewidth_us(theta2pluse(15));
+    #endif
+   
 
     TMCSerial.setup_all_stepper();
 
