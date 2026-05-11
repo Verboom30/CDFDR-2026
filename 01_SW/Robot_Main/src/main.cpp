@@ -16,7 +16,7 @@ DigitalOut En_servo_N(ENABLE_SERVO_N);
 
 bool stopLidar = false;
 bool Fin_de_match = false;
-bool Couleur_Team = 0; // false bleu, true jaune
+Team Couleur_Team = BLUE; 
 
 I2C i2c(SDA, SCL);
 
@@ -41,7 +41,7 @@ DigitalOut led_lidar(LIDAR_LED);
 
 Lidar* LidarLD19 = new Lidar(LIDAR_TX, LIDAR_RX, 230400);
 CommandAsserv asserv(UART_TX, UART_RX, 115200);
-//LidarAnalyzer LidaRayzer(LidarLD19, &asserv, &led_lidar);
+LidarAnalyzer LidaRayzer(LidarLD19, &asserv, &led_lidar);
 
 LCD lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7, LCD16x2);
 
@@ -263,7 +263,7 @@ void DeposeCaise1(uint8_t arm_id)
     {
         bool goodColor = false;
 
-        if (Couleur_Team == false) // équipe BLEU
+        if (Couleur_Team == BLUE) // équipe BLEU
         {
             goodColor = (colorResults[i].color == TCS34007Mux::COLOR_YELLOW);
         }
@@ -437,10 +437,10 @@ void waitTeamValidation()
 {
     while (true)
     {
-        Couleur_Team = !SW_team.read();
+        Couleur_Team = (SW_team.read() == 0) ? BLUE : YELLOW;
 
         lcdStatus("Choix equipe",
-                  Couleur_Team ? "JAUNE" : "BLEU");
+                  (Couleur_Team == YELLOW) ? "JAUNE" : "BLEU");
 
         if (SW_init.read() == 0)
         {
@@ -449,10 +449,10 @@ void waitTeamValidation()
             if (SW_init.read() == 0)
             {
                 lcdStatus("Equipe validee",
-                          Couleur_Team ? "JAUNE" : "BLEU");
+                          (Couleur_Team == YELLOW) ? "JAUNE" : "BLEU");
 
                 printf("Equipe validee : %s\r\n",
-                       Couleur_Team ? "JAUNE" : "BLEU");
+                       (Couleur_Team == YELLOW) ? "JAUNE" : "BLEU");
 
                 while (SW_init.read() == 0)
                 {
@@ -474,7 +474,7 @@ void main_thread()
     FsmState = IDLE;
 
     lcdStatus("Wait Init",
-              Couleur_Team ? "Team Yellow" : "Team Blue");
+              Couleur_Team == YELLOW ? "Team Yellow" : "Team Blue");
 
     while (true)
     {

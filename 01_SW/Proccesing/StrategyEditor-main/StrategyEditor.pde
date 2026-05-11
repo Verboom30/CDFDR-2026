@@ -22,7 +22,7 @@ public static float pamiHitbox_mm = 220;
 int nextPointId = 0;
 public static ArrayList<StrategyPoint> points = new ArrayList<StrategyPoint>();
 
-public static float mmToPx = 0.8;
+public static float mmToPx = 0.4;
 
 public static final int TERRAIN_W_MM = 3000;
 public static final int TERRAIN_H_MM = 2000;

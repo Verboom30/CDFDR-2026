@@ -2,6 +2,7 @@
 #define COMMAND_ASSERV_HPP
 
 #include "mbed.h"
+#include "main_pck.hpp"
 
 /******************************************************************************
  * CommandAsserv UART Protocol
@@ -93,6 +94,7 @@ public:
         STATUS_PAUSED
     };
 
+
     struct BroadcastData
     {
         int x;
@@ -116,10 +118,11 @@ public:
     bool move(int x, int y);
     bool rotate(int alpha);
 
-    bool setPosition(int x, int y, int alpha);
+    bool setPosition(int x, int y, int Alpha, Team Team);
 
     bool enableBroadcast();
     bool requestStatus();
+    bool gotoRotateTeam(int x, int y, int Alpha, Team Team);
 
     BroadcastData getBroadcast();
 

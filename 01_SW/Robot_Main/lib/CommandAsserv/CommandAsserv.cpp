@@ -64,13 +64,23 @@ bool CommandAsserv::rotate(int alpha)
     return sendAndWaitAckThenArrived(buffer);
 }
 
-bool CommandAsserv::setPosition(int x, int y, int alpha)
+bool CommandAsserv::setPosition(int x, int y, int Alpha, Team Team)
 {
     char buffer[64];
+    int _x = Team == YELLOW ? abs(3000-x) : x;
+    int _alpha = Team == YELLOW ? (Alpha*-1.0) : Alpha;
 
-    sprintf(buffer, "C %d %d %d\n", x, y, alpha);
+    sprintf(buffer, "C %d %d %d\n", _x, y, _alpha);
 
     return sendAndWaitAck(buffer);
+}
+
+bool CommandAsserv::gotoRotateTeam(int x, int y, int Alpha, Team Team)
+{
+    int _x = Team == YELLOW ? abs(3000-x) : x;
+    int _alpha = Team == YELLOW ? (Alpha*-1.0) : Alpha;
+    goTo(_x, y);
+    rotate(_alpha);
 }
 
 bool CommandAsserv::enableBroadcast()
