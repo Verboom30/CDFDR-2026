@@ -6,16 +6,19 @@
 #include "Stepper.hpp"
 #include <cmath>
 
-#define RADIUS       135.5f   
+#define RADIUS       135.5f
 #define RSTEP        198
 #define RWHEEL       27.5f
 #define REDUC        0.5f
 
-#define MSTEP_DRIVE  4
+#define MSTEP_DRIVE  8
 
-#define KSTP float((M_PI * 2.0f * RWHEEL / (RSTEP * MSTEP_DRIVE)) * REDUC)
+#define KSTP_RAW float((M_PI * 2.0f * RWHEEL / (RSTEP * MSTEP_DRIVE)) * REDUC)
 
-#define SPEED        1000.0f
+// calibration déplacement
+#define KSTP (KSTP_RAW * 1.020868421052632f)
+
+#define SPEED        800.0f
 #define ACC          4.0f
 #define DEC          4.0f
 

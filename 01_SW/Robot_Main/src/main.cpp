@@ -502,13 +502,13 @@ void main_thread()
 
         case START_UP: 
             robot.setPosition(0,0,0,false);
-            robot.Robotmove(0,50,0,1);
-            ThisThread::sleep_for(1000ms);
-            robot.Robotmove(50,0,0,1);
-            ThisThread::sleep_for(1000ms);
-            robot.Robotmove(0,-50,0,1);
-            ThisThread::sleep_for(1000ms);
-            robot.Robotmove(-50,0,0,1);
+            robot.Robotgoto(0,1500,0,0,1);
+            // ThisThread::sleep_for(1000ms);
+            // robot.Robotgoto(50,50,0,0,1);
+            // ThisThread::sleep_for(1000ms);
+            // robot.Robotgoto(50,0,0,0,1);
+            // ThisThread::sleep_for(1000ms);
+            // robot.Robotgoto(0,0,0,0,1);
           
             FsmState = CAL;
             break;
