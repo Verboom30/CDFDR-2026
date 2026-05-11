@@ -151,35 +151,17 @@ void Holonome::computeKinematics()
 
     float rotSpeed = RADIUS * _SpeedTheta;
 
-    float moveA =
-        -rotMove
-        - cosf(alphaRad) * _MoveX
-        + sinf(alphaRad) * _MoveY;
+    float moveA = -rotMove - cosf(alphaRad) * _MoveX+ sinf(alphaRad) * _MoveY;
 
-    float moveB =
-        -rotMove
-        + cosf(thetaPlusRad) * _MoveX
-        - sinf(thetaPlusRad) * _MoveY;
+    float moveB = -rotMove + cosf(thetaPlusRad) * _MoveX + sinf(thetaPlusRad) * _MoveY;
 
-    float moveC =
-        -rotMove
-        + cosf(thetaMinusRad) * _MoveX
-        + sinf(thetaMinusRad) * _MoveY;
+    float moveC = -rotMove + cosf(thetaMinusRad) * _MoveX - sinf(thetaMinusRad) * _MoveY;
 
-    float speedA =
-        -rotSpeed
-        - cosf(alphaRad) * _SpeedX
-        + sinf(alphaRad) * _SpeedY;
+    float speedA = -rotSpeed - cosf(alphaRad) * _SpeedX + sinf(alphaRad) * _SpeedY;
 
-    float speedB =
-        -rotSpeed
-        + cosf(thetaPlusRad) * _SpeedX
-        - sinf(thetaPlusRad) * _SpeedY;
+    float speedB = -rotSpeed + cosf(thetaPlusRad) * _SpeedX + sinf(thetaPlusRad) * _SpeedY;
 
-    float speedC =
-        -rotSpeed
-        + cosf(thetaMinusRad) * _SpeedX
-        + sinf(thetaMinusRad) * _SpeedY;
+    float speedC = -rotSpeed + cosf(thetaMinusRad) * _SpeedX - sinf(thetaMinusRad) * _SpeedY;
 
     _StepA = (int)(moveA / KSTP);
     _StepB = (int)(moveB / KSTP);
@@ -265,26 +247,11 @@ void Holonome::updatePosition()
 
     float alphaRad = _Theta * M_PI / 180.0f;
 
-    float dAlpha =
-        (
-            (-1.0f / (3.0f * RADIUS)) * _deltaB +
-            (-1.0f / (3.0f * RADIUS)) * _deltaA +
-            (-1.0f / (3.0f * RADIUS)) * _deltaC
-        ) * KSTP;
+    float dAlpha =( (-1.0f / (3.0f * RADIUS)) * _deltaB + (-1.0f / (3.0f * RADIUS)) * _deltaA + (-1.0f / (3.0f * RADIUS)) * _deltaC ) * KSTP;
 
-    float dX =
-        (
-            (-cosf(alphaRad) / 6.0f) * _deltaA +
-            ((cosf(alphaRad) - sqrtf(3.0f) * sinf(alphaRad)) / 12.0f) * _deltaB +
-            ((sqrtf(3.0f) * sinf(alphaRad) + cosf(alphaRad)) / 12.0f) * _deltaC
-        ) * KSTP * 4.0f;
+    float dX = ((-cosf(alphaRad) / 6.0f) * _deltaA + ((cosf(alphaRad) - sqrtf(3.0f) * sinf(alphaRad)) / 12.0f) * _deltaB + ((sqrtf(3.0f) * sinf(alphaRad) + cosf(alphaRad)) / 12.0f) * _deltaC ) * KSTP * 4.0f;
 
-    float dY =
-        (
-            (sinf(alphaRad) / 6.0f) * _deltaA -
-            ((sinf(alphaRad) + sqrtf(3.0f) * cosf(alphaRad)) / 12.0f) * _deltaB +
-            ((sqrtf(3.0f) * cosf(alphaRad) - sinf(alphaRad)) / 12.0f) * _deltaC
-        ) * KSTP * 4.0f;
+    float dY =-((sinf(alphaRad) / 6.0f) * _deltaA -((sinf(alphaRad) + sqrtf(3.0f) * cosf(alphaRad)) / 12.0f) * _deltaB + ((sqrtf(3.0f) * cosf(alphaRad) - sinf(alphaRad)) / 12.0f) * _deltaC) * KSTP * 4.0f;
 
     _Theta += dAlpha * 180.0f / M_PI;
     _Theta = normalizeAngle(_Theta);

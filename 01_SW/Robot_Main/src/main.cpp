@@ -9,7 +9,7 @@
 #include "lidar.hpp"
 #include "LidarAnalyzer.hpp"
 #include "CommandAsserv.hpp"
-//#define DEBUG
+#define DEBUG
 //#define LIDAR
 DigitalOut En_drive_N(EN_DRIVE_N);
 DigitalOut En_servo_N(ENABLE_SERVO_N);
@@ -40,12 +40,16 @@ TCS34007Mux::ColorResult colorResults[4];
 DigitalOut led_lidar(LIDAR_LED);
 
 Lidar* LidarLD19 = new Lidar(LIDAR_TX, LIDAR_RX, 230400);
-CommandAsserv asserv(UART_TX, UART_RX, 115200);
-LidarAnalyzer LidaRayzer(LidarLD19, &asserv, &led_lidar);
+//CommandAsserv asserv(UART_TX, UART_RX, 115200);
+//LidarAnalyzer LidaRayzer(LidarLD19, &asserv, &led_lidar);
 
 LCD lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7, LCD16x2);
 
+Stepper stepA(STEP_A, DIR_A, false);
+Stepper stepB(STEP_B, DIR_B, false);
+Stepper stepC(STEP_C, DIR_C, false);
 
+Holonome robot(&stepA, &stepB, &stepC, &stopLidar);
 
 volatile bool end_match = false;
 
@@ -93,14 +97,22 @@ void endMatchProcess()
 
 // }
 
-// void routineAffichage()
-// {
-//     while (true)
-//     {
-//         printPosition();
-//         ThisThread::sleep_for(100ms);
-//     }
-// }
+void printPosition()
+{
+    printf("%f;%f;%f\r\n",
+           robot.getPositionX(),
+           robot.getPositionY(),
+           robot.getTheta());
+}
+
+void routineAffichage()
+{
+    while (true)
+    {
+        printPosition();
+        ThisThread::sleep_for(100ms);
+    }
+}
 
 void print_lcd()
 {
@@ -488,7 +500,15 @@ void main_thread()
             }
             break;
 
-        case START_UP:
+        case START_UP: 
+            robot.setPosition(0,0,0,false);
+            robot.Robotmove(0,50,0,1);
+            ThisThread::sleep_for(1000ms);
+            robot.Robotmove(50,0,0,1);
+            ThisThread::sleep_for(1000ms);
+            robot.Robotmove(0,-50,0,1);
+            ThisThread::sleep_for(1000ms);
+            robot.Robotmove(-50,0,0,1);
           
             FsmState = CAL;
             break;
