@@ -8,6 +8,7 @@
 #include "ColorSensor.hpp"
 #include "lidar.hpp"
 #include "LidarAnalyzer.hpp"
+#include "CommandAsserv.hpp"
 //#define DEBUG
 //#define LIDAR
 DigitalOut En_drive_N(EN_DRIVE_N);
@@ -39,9 +40,12 @@ TCS34007Mux::ColorResult colorResults[4];
 DigitalOut led_lidar(LIDAR_LED);
 
 Lidar* LidarLD19 = new Lidar(LIDAR_TX, LIDAR_RX, 230400);
-//LidarAnalyzer LidaRayzer(LidarLD19, &robot, &led_lidar);
+CommandAsserv asserv(UART_TX, UART_RX, 115200);
+//LidarAnalyzer LidaRayzer(LidarLD19, &asserv, &led_lidar);
 
 LCD lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7, LCD16x2);
+
+
 
 volatile bool end_match = false;
 
@@ -51,6 +55,7 @@ Thread lcd_thread;
 Thread game_thread;
 Thread lidarAnalyzer_thread;
 Thread drive_thread;
+Thread broadcast_thread;
 
 #ifdef DEBUG
 Thread threadAffichage;
@@ -71,22 +76,31 @@ void endMatchProcess()
     end_match = true;
 }
 
-void printPosition()
-{
-    // printf("%f;%f;%f\r\n",
-    //        robot.getPositionX(),
-    //        robot.getPositionY(),
-    //        robot.getTheta());
-}
+// --- Debug position robot / lidar ---
+// void printPosition()
+// {
+//     CommandAsserv::BroadcastData data = asserv.getBroadcast();
 
-void routineAffichage()
-{
-    while (true)
-    {
-        printPosition();
-        ThisThread::sleep_for(100ms);
-    }
-}
+//     /*
+//      * Debug simple Processing
+//      * Format :
+//      * X ; Y ; Alpha
+//      */
+//     printf("%d;%d;%d\r\n",
+//            data.x,
+//            data.y,
+//            data.alpha);
+
+// }
+
+// void routineAffichage()
+// {
+//     while (true)
+//     {
+//         printPosition();
+//         ThisThread::sleep_for(100ms);
+//     }
+// }
 
 void print_lcd()
 {
@@ -103,19 +117,38 @@ void print_lcd()
     }
 }
 
-// void thread_lidar()
+// void thread_broadcast()
 // {
 //     while (true)
 //     {
-//         LidaRayzer.update();
+//         CommandAsserv::BroadcastData data = asserv.getBroadcast();
 
-// #ifdef LIDAR
-//         stopLidar = LidaRayzer.isObstacleDetected();
-// #endif
+//         if (data.valid)
+//         {
+//             printf("ASSERV X=%d Y=%d A=%d VX=%d VY=%d VA=%d\r\n",
+//                    data.x,
+//                    data.y,
+//                    data.alpha,
+//                    data.vx,
+//                    data.vy,
+//                    data.valpha);
+//         }
 
-//         ThisThread::sleep_for(5ms);
+//         ThisThread::sleep_for(100ms);
 //     }
 // }
+
+void thread_lidar()
+{
+    while (true)
+    {
+#ifdef LIDAR
+        LidaRayzer.update();
+#endif
+        ThisThread::sleep_for(5ms);
+    }
+}
+
 
 void disable_all_mux()
 {
@@ -381,6 +414,7 @@ void safeStopAll(const char* msg)
     end_match = true;
     En_drive_N = 1;
     En_servo_N = 1;
+    //asserv.stop();
     lcdStatus(msg);
 }
 
@@ -548,7 +582,9 @@ int main()
     lcd.cls();
     game_thread.start(main_thread);
 
-    // lidarAnalyzer_thread.start(thread_lidar);
+    //asserv.enableBroadcast();
+    lidarAnalyzer_thread.start(thread_lidar);
+    //broadcast_thread.start(thread_broadcast);
 
     while (true)
     {
