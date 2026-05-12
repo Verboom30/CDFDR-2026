@@ -20,7 +20,7 @@
 #define KSTP_RAW float((M_PI * 2.0f * RWHEEL / (RSTEP * MSTEP_DRIVE)) * REDUC)
 #define KSTP     (KSTP_RAW * 1.02086f)
 
-#define SPEED        700.0f
+#define SPEED        1000.0f
 #define ACC          4.0f
 #define DEC          4.0f
 

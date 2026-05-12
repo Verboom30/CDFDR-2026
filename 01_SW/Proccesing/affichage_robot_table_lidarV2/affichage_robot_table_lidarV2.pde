@@ -21,7 +21,7 @@ void setup() {
   // List all the available serial ports
   //printArray(Serial.list());
   // Open the port you are using at the rate you want:
-  myPort = new Serial(this, Serial.list()[0], 230400);
+  myPort = new Serial(this, Serial.list()[1], 230400);
     
   size(1500,900);
   Table = loadImage("playmat_2025_FINAL.png");

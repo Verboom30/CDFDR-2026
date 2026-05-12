@@ -1,39 +1,34 @@
-#ifndef LIDAR_ANALYZER_HPP
-#define LIDAR_ANALYZER_HPP
+#pragma once
 
 #include "mbed.h"
-#include "lidar.hpp"
-#include "CommandAsserv.hpp"
+#include "lidar.hpp"        // Ton capteur Lidar
+#include "Holonome.hpp"
 
-class LidarAnalyzer
-{
+class LidarAnalyzer {
 public:
-    LidarAnalyzer(Lidar* lidar,
-                  CommandAsserv* asserv,
-                  DigitalOut* status_led = nullptr);
+    LidarAnalyzer(Lidar* lidar, Holonome* robot, DigitalOut* status_led);
 
     void update();
-
     bool isObstacleDetected() const;
 
     float getObstacleDistance() const;
     float getObstacleAngle() const;
     float getObstacleAngleCible() const;
-
     float getObstacleX() const;
     float getObstacleY() const;
 
 private:
     bool isAngleInRange(float angle, float min, float max) const;
-    float normalize360(float angle) const;
 
-private:
+
     Lidar* lidar_;
-    CommandAsserv* asserv_;
+    Holonome* robot_;
     DigitalOut* led_;
 
     bool stop_;
     int stableStopCounter_;
+    static constexpr int STOP_ON_THRESHOLD  = 1;
+    static constexpr int STOP_OFF_THRESHOLD = 20;
 
     int NbDetecLidarPack;
     int NbNoDetecLidarPack;
@@ -41,11 +36,6 @@ private:
     float DistanceLidar;
     float AngleLidar;
     float AngleLidarCible;
-
     float PointLidarX;
     float PointLidarY;
-
-    float lastMoveAngle_;
 };
-
-#endif

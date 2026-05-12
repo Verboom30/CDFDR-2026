@@ -61,16 +61,16 @@ void Holonome::run()
 
 void Holonome::pause()
 {
-    StepperA->pause();
-    StepperB->pause();
-    StepperC->pause();
+    StepperA->pause(StepperA->getSpeed()*ACC);
+    StepperB->pause(StepperB->getSpeed()*ACC);
+    StepperC->pause(StepperB->getSpeed()*ACC);
 }
 
 void Holonome::resume()
 {
-    StepperA->resume();
-    StepperB->resume();
-    StepperC->resume();
+    StepperA->resume(StepperA->getAcceleration());
+    StepperB->resume(StepperB->getAcceleration());
+    StepperC->resume(StepperC->getAcceleration());
 }
 
 void Holonome::stop()
