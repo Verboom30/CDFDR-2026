@@ -57,11 +57,11 @@ void Holonome::stop()
     StepperC->stop();
 }
 
-void Holonome::setPosition(int positionX, int positionY, int theta, bool team)
+void Holonome::setPosition(int positionX, int positionY, int theta, Team team)
 {
     ScopedLock<Mutex> lock(mutexData);
 
-    if (team)
+    if (team == BLUE)
     {
         _positionX = 3000.0f - positionX;
         _positionY = positionY;
@@ -275,13 +275,13 @@ void Holonome::Robotmove(int moveX, int moveY, int moveTheta, bool enableLidar, 
     } while (!PosCibleDone());
 }
 
-void Holonome::Robotgoto(int positionX, int positionY, int theta, bool team, float coefSpeed)
+void Holonome::Robotgoto(int positionX, int positionY, int theta, Team team, float coefSpeed)
 {
     float targetX;
     float targetY;
     float targetTheta;
 
-    if (team)
+    if (team == BLUE)
     {
         targetX = 3000.0f - positionX;
         targetY = positionY;

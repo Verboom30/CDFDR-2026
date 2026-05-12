@@ -4,6 +4,7 @@
 #include "mbed.h"
 #include "pinout.hpp"
 #include "Stepper.hpp"
+#include "main_pck.hpp"
 #include <cmath>
 
 #define RADIUS       131.0f
@@ -50,7 +51,7 @@ public:
         int positionX,
         int positionY,
         int theta,
-        bool team = false
+        Team team = BLUE
     );
 
     void setPositionZero();
@@ -79,7 +80,7 @@ public:
         int positionX,
         int positionY,
         int theta,
-        bool team = false,
+        Team team = BLUE,
         float coefSpeed = 1.0f
     );
 

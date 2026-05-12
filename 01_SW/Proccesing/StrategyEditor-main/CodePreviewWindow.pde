@@ -89,7 +89,7 @@ public class CodePreviewWindow extends PApplet {
 
     StrategyPoint first = StrategyEditor.points.get(0);
 
-    result += "asserv.setPosition("
+    result += "Robot.setPosition("
       + int(first.x_mm) + ", "
       + int(first.y_mm) + ", "
       + round(first.angleDeg) + ", Couleur_Team);\n";
@@ -97,10 +97,10 @@ public class CodePreviewWindow extends PApplet {
     for (int i = 1; i < StrategyEditor.points.size(); i++) {
       StrategyPoint p = StrategyEditor.points.get(i);
 
-      result += "asserv.gotoRotateTeam("
+      result += "Robot.Robotgoto("
         + int(p.x_mm) + ", "
         + int(p.y_mm) + ", "
-        + round(p.angleDeg) + ", Couleur_Team);";
+        + round(p.angleDeg) + ", Couleur_Team, NORMALSPEED);";
 
       if (p.poiName != null) {
         result += "  // Step " + i + " - POI " + p.poiName;
