@@ -10,17 +10,40 @@ Holonome::Holonome(Stepper* moteurA, Stepper* moteurB, Stepper* moteurC, bool* S
       StepperC(moteurC),
       _stopLidar(StopLidar)
 {
-    _positionX = _positionY = 0;
-    _cibleposX = _cibleposY = 0;
-    _Theta = 0;
+    _positionX = 0.0f;
+    _positionY = 0.0f;
+    _Theta = 0.0f;
 
-    _MoveX = _MoveY = _MoveTheta = 0;
-    _SpeedX = _SpeedY = _SpeedTheta = 0;
+    _positionX_Save = 0.0f;
+    _positionY_Save = 0.0f;
+    _Theta_Save = 0.0f;
 
-    _SpeedA = _SpeedB = _SpeedC = 0;
-    _StepA = _StepB = _StepC = 0;
+    _cibleposX = 0.0f;
+    _cibleposY = 0.0f;
 
-    _deltaA = _deltaB = _deltaC = 0;
+    _MoveX = 0.0f;
+    _MoveY = 0.0f;
+    _MoveTheta = 0.0f;
+
+    _SpeedX = 0.0f;
+    _SpeedY = 0.0f;
+    _SpeedTheta = 0.0f;
+
+    _SpeedA = 0.0f;
+    _SpeedB = 0.0f;
+    _SpeedC = 0.0f;
+
+    _StepA = 0;
+    _StepB = 0;
+    _StepC = 0;
+
+    lastPosA = 0;
+    lastPosB = 0;
+    lastPosC = 0;
+
+    _deltaA = 0;
+    _deltaB = 0;
+    _deltaC = 0;
 
     routineMove.start(callback(this, &Holonome::routine_mouvement));
     threadOdometrie.start(callback(this, &Holonome::routine_odometrie));
@@ -74,12 +97,20 @@ void Holonome::setPosition(int positionX, int positionY, int theta, Team team)
         _Theta = theta;
     }
 
+    _positionX_Save = _positionX;
+    _positionY_Save = _positionY;
+    _Theta_Save = _Theta;
+
     _cibleposX = _positionX;
     _cibleposY = _positionY;
 
-    lastPosA = StepperA->getPosition();
-    lastPosB = StepperB->getPosition();
-    lastPosC = StepperC->getPosition();
+    StepperA->setPositionZero();
+    StepperB->setPositionZero();
+    StepperC->setPositionZero();
+
+    lastPosA = 0;
+    lastPosB = 0;
+    lastPosC = 0;
 }
 
 void Holonome::setPositionZero()
@@ -87,19 +118,34 @@ void Holonome::setPositionZero()
     StepperA->setPositionZero();
     StepperB->setPositionZero();
     StepperC->setPositionZero();
+
+    lastPosA = 0;
+    lastPosB = 0;
+    lastPosC = 0;
 }
 
 void Holonome::resetPosition()
 {
     ScopedLock<Mutex> lock(mutexData);
 
-    _positionX = 0;
-    _positionY = 0;
-    _Theta = 0;
+    _positionX = 0.0f;
+    _positionY = 0.0f;
+    _Theta = 0.0f;
 
-    lastPosA = StepperA->getPosition();
-    lastPosB = StepperB->getPosition();
-    lastPosC = StepperC->getPosition();
+    _positionX_Save = 0.0f;
+    _positionY_Save = 0.0f;
+    _Theta_Save = 0.0f;
+
+    _cibleposX = 0.0f;
+    _cibleposY = 0.0f;
+
+    StepperA->setPositionZero();
+    StepperB->setPositionZero();
+    StepperC->setPositionZero();
+
+    lastPosA = 0;
+    lastPosB = 0;
+    lastPosC = 0;
 }
 
 float Holonome::normalizeAngle(float angle)
@@ -115,22 +161,34 @@ void Holonome::move(int moveX, int moveY, int moveTheta, float coefSpeed)
         ScopedLock<Mutex> lock(mutexData);
 
         _MoveX = moveX;
-        _MoveY = moveY;       // inversion Y conservée car Robotmove fonctionne avec ça
+        _MoveY = moveY;
         _MoveTheta = moveTheta;
+
+        _positionX_Save = _positionX;
+        _positionY_Save = _positionY;
+        _Theta_Save = _Theta;
+
+        StepperA->setPositionZero();
+        StepperB->setPositionZero();
+        StepperC->setPositionZero();
+
+        lastPosA = 0;
+        lastPosB = 0;
+        lastPosC = 0;
 
         float sum = fabsf(_MoveX) + fabsf(_MoveY) + fabsf(_MoveTheta);
 
         if (sum < 0.001f)
         {
-            _SpeedX = 0;
-            _SpeedY = 0;
-            _SpeedTheta = 0;
+            _SpeedX = 0.0f;
+            _SpeedY = 0.0f;
+            _SpeedTheta = 0.0f;
         }
         else
         {
-            _SpeedX     = (fabsf(_MoveX)     / sum) * SPEED * coefSpeed;
-            _SpeedY     = (fabsf(_MoveY)     / sum) * SPEED * coefSpeed;
-            _SpeedTheta = (fabsf(_MoveTheta) / sum) * SPEED * (1.2f/RADIUS) * coefSpeed;
+            _SpeedX     = (_MoveX / sum) * SPEED * coefSpeed;
+            _SpeedY     = (_MoveY / sum) * SPEED * coefSpeed;
+            _SpeedTheta = (_MoveTheta / sum) * (2.0f * SPEED / RADIUS) * coefSpeed;
         }
 
         computeKinematics();
@@ -141,27 +199,26 @@ void Holonome::move(int moveX, int moveY, int moveTheta, float coefSpeed)
 
 void Holonome::computeKinematics()
 {
-    float alphaRad = _Theta * M_PI / 180.0f;
-    float thetaPlusRad  = (60 + _Theta) * M_PI / 180.0f;
-    float thetaMinusRad = (60 - _Theta) * M_PI / 180.0f;
+    float alphaRad      = -_Theta * M_PI / 180.0f;
+    float thetaPlusRad  = (60.0f -_Theta) * M_PI / 180.0f;
+    float thetaMinusRad = (60.0f + _Theta) * M_PI / 180.0f;
 
     float moveAlphaRad = _MoveTheta * M_PI / 180.0f;
 
-    float rotMove = RADIUS * moveAlphaRad;
+    float moveY  = -_MoveY;
+    float speedY = -_SpeedY;
 
-    float rotSpeed = RADIUS * _SpeedTheta;
+    float moveA =(-RADIUS * moveAlphaRad)- cosf(alphaRad) * _MoveX+ sinf(alphaRad) * moveY;
 
-    float moveA = -rotMove - cosf(alphaRad) * _MoveX+ sinf(alphaRad) * _MoveY;
+    float moveB =(-RADIUS * moveAlphaRad)+ cosf(thetaPlusRad) * _MoveX- sinf(thetaPlusRad) * moveY;
 
-    float moveB = -rotMove + cosf(thetaPlusRad) * _MoveX + sinf(thetaPlusRad) * _MoveY;
+    float moveC =(-RADIUS * moveAlphaRad)+ cosf(thetaMinusRad) * _MoveX+ sinf(thetaMinusRad) * moveY;
 
-    float moveC = -rotMove + cosf(thetaMinusRad) * _MoveX - sinf(thetaMinusRad) * _MoveY;
+    float speedA =(-RADIUS * _SpeedTheta)- cosf(alphaRad) * _SpeedX+ sinf(alphaRad) * speedY;
 
-    float speedA = -rotSpeed - cosf(alphaRad) * _SpeedX + sinf(alphaRad) * _SpeedY;
+    float speedB =(-RADIUS * _SpeedTheta)+ cosf(thetaPlusRad) * _SpeedX- sinf(thetaPlusRad) * speedY;
 
-    float speedB = -rotSpeed + cosf(thetaPlusRad) * _SpeedX + sinf(thetaPlusRad) * _SpeedY;
-
-    float speedC = -rotSpeed + cosf(thetaMinusRad) * _SpeedX - sinf(thetaMinusRad) * _SpeedY;
+    float speedC =(-RADIUS * _SpeedTheta)+ cosf(thetaMinusRad) * _SpeedX+ sinf(thetaMinusRad) * speedY;
 
     _StepA = (int)(moveA / KSTP);
     _StepB = (int)(moveB / KSTP);
@@ -245,20 +302,18 @@ void Holonome::updatePosition()
     lastPosB = posB;
     lastPosC = posC;
 
-    float alphaRad = _Theta * M_PI / 180.0f;
+    float alpha = _Theta_Save + ((-1.0f / (3.0f * RADIUS)) * posB + (-1.0f / (3.0f * RADIUS)) * posA + (-1.0f / (3.0f * RADIUS)) * posC) * KSTP / (M_PI / 180.0f);
 
-    float dAlpha =( (-1.0f / (3.0f * RADIUS)) * _deltaB + (-1.0f / (3.0f * RADIUS)) * _deltaA + (-1.0f / (3.0f * RADIUS)) * _deltaC ) * KSTP;
+    _Theta = normalizeAngle(alpha);
 
-    float dX = ((-cosf(alphaRad) / 6.0f) * _deltaA + ((cosf(alphaRad) - sqrtf(3.0f) * sinf(alphaRad)) / 12.0f) * _deltaB + ((sqrtf(3.0f) * sinf(alphaRad) + cosf(alphaRad)) / 12.0f) * _deltaC ) * KSTP * 4.0f;
+    float alphaRad = -alpha * M_PI / 180.0f;
 
-    float dY =-((sinf(alphaRad) / 6.0f) * _deltaA -((sinf(alphaRad) + sqrtf(3.0f) * cosf(alphaRad)) / 12.0f) * _deltaB + ((sqrtf(3.0f) * cosf(alphaRad) - sinf(alphaRad)) / 12.0f) * _deltaC) * KSTP * 4.0f;
 
-    _Theta += dAlpha * 180.0f / M_PI;
-    _Theta = normalizeAngle(_Theta);
+    _positionX = _positionX_Save + ((-cosf(alphaRad) / 6.0f) * posA + ((cosf(alphaRad) - sqrtf(3.0f) * sinf(alphaRad)) / 12.0f) * posB + ((sqrtf(3.0f) * sinf(alphaRad) + cosf(alphaRad)) / 12.0f) * posC ) * KSTP * 4.0f;
 
-    _positionX += dX;
-    _positionY += dY;
+    _positionY = _positionY_Save - ((sinf(alphaRad) / 6.0f) * posA - ((sinf(alphaRad) + sqrtf(3.0f) * cosf(alphaRad)) / 12.0f) * posB + ((sqrtf(3.0f) * cosf(alphaRad) - sinf(alphaRad)) / 12.0f) * posC) * KSTP * 4.0f;
 }
+
 void Holonome::Robotmove(int moveX, int moveY, int moveTheta, bool enableLidar, float coefSpeed)
 {
     move(moveX, moveY, moveTheta, coefSpeed);
