@@ -330,12 +330,13 @@ void Holonome::Robotmove(int moveX, int moveY, int moveTheta, bool enableLidar, 
     } while (!PosCibleDone());
 }
 
-void Holonome::Robotgoto(int positionX, int positionY, int theta, Team team, float coefSpeed)
+void Holonome::Robotgoto(int positionX,int positionY,int theta,Team team,float coefSpeed)
 {
     float targetX;
     float targetY;
     float targetTheta;
 
+    // gestion symétrie terrain
     if (team == BLUE)
     {
         targetX = 3000.0f - positionX;
@@ -349,25 +350,58 @@ void Holonome::Robotgoto(int positionX, int positionY, int theta, Team team, flo
         targetTheta = theta;
     }
 
+    // position actuelle
     float currentX = getPositionX();
     float currentY = getPositionY();
     float currentTheta = getTheta();
 
+    // déplacement absolu table
     float moveX = targetX - currentX;
     float moveY = targetY - currentY;
-    float moveTheta = normalizeAngle(targetTheta - currentTheta);
 
-    if (moveX > -0.1f && moveX < 0.1f) moveX = 0.0f;
-    if (moveY > -0.1f && moveY < 0.1f) moveY = 0.0f;
-    if (moveTheta > -0.1f && moveTheta < 0.1f) moveTheta = 0.0f;
+    // rotation finale uniquement
+    float moveTheta =
+        normalizeAngle(targetTheta - currentTheta);
+
+    // filtrage petites erreurs
+    if (fabsf(moveX) < 0.1f) moveX = 0.0f;
+    if (fabsf(moveY) < 0.1f) moveY = 0.0f;
+    if (fabsf(moveTheta) < 0.1f) moveTheta = 0.0f;
 
     {
         ScopedLock<Mutex> lock(mutexData);
+
         _cibleposX = targetX;
         _cibleposY = targetY;
     }
 
-    Robotmove((int)moveX, (int)moveY, (int)moveTheta, true, coefSpeed);
+    // -----------------------------
+    // 1) translation
+    // -----------------------------
+    if (moveX != 0.0f || moveY != 0.0f)
+    {
+        Robotmove(
+            (int)moveX,
+            (int)moveY,
+            0,
+            true,
+            coefSpeed
+        );
+    }
+
+    // -----------------------------
+    // 2) rotation
+    // -----------------------------
+    if (moveTheta != 0.0f)
+    {
+        Robotmove(
+            0,
+            0,
+            (int)moveTheta,
+            true,
+            coefSpeed
+        );
+    }
 }
 
 bool Holonome::stopped()

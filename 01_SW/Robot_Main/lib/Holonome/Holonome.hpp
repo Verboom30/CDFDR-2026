@@ -11,7 +11,7 @@
 #define M_PI 3.14159265358979323846f
 #endif
 
-#define RADIUS       135.5f
+#define RADIUS       130.0f
 #define RSTEP        198
 #define RWHEEL       27.5f
 #define REDUC        0.5f
