@@ -367,6 +367,48 @@ void renumerotePoints() {
   }
 }
 
+StrategyPoint insertPointAfter(StrategyPoint previousPoint) {
+  if (previousPoint == null) return null;
+
+  int index = points.indexOf(previousPoint);
+  if (index == -1) return null;
+
+  float x_mm;
+  float y_mm;
+  float angleDeg;
+
+  if (index < points.size() - 1) {
+    StrategyPoint nextPoint = points.get(index + 1);
+
+    // Si on ajoute entre P2 et P3, le nouveau point est placé au milieu.
+    x_mm = round((previousPoint.x_mm + nextPoint.x_mm) / 2.0);
+    y_mm = round((previousPoint.y_mm + nextPoint.y_mm) / 2.0);
+    angleDeg = headingTo(previousPoint.x_mm, previousPoint.y_mm, nextPoint.x_mm, nextPoint.y_mm);
+  } else {
+    // Si c'est le dernier point, on ajoute un point 100 mm devant lui.
+    float a = radians(previousPoint.angleDeg);
+    x_mm = round(constrain(previousPoint.x_mm + sin(a) * 100, 0, TERRAIN_W_MM));
+    y_mm = round(constrain(previousPoint.y_mm + cos(a) * 100, 0, TERRAIN_H_MM));
+    angleDeg = previousPoint.angleDeg;
+  }
+
+  StrategyPoint newPoint = new StrategyPoint(nextPointId++, x_mm, y_mm);
+  newPoint.angleDeg = normalizeAngle180(angleDeg);
+
+  POI snap = getNearbyPOI(x_mm, y_mm, 50);
+  if (snap != null) {
+    newPoint.x_mm = snap.x;
+    newPoint.y_mm = snap.y;
+    newPoint.poiName = snap.name;
+  }
+
+  points.add(index + 1, newPoint);
+  renumerotePoints();
+
+  selectedPoint = newPoint;
+  return newPoint;
+}
+
 StrategyPoint getPointUnderMouse() {
   float mx = screenToWorldX(mouseX);
   float my = screenToWorldY(mouseY);

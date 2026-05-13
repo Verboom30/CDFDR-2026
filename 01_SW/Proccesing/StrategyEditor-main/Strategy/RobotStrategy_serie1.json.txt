@@ -1,0 +1,38 @@
+			Robot.setPosition(375, 1775, 180, Couleur_Team);
+            Robot.Robotgoto(375, 1775, -30, Couleur_Team, NORMALSPEED);  // Step 1 - POI startYellow
+            Robot.Robotgoto(135, 1775, -30, Couleur_Team, NORMALSPEED);  // Step 1 - POI startYellow
+            Robot.Robotgoto(135, 1820, -30, Couleur_Team, NORMALSPEED);  // Step 2
+            Robot.Robotgoto(125, 1820, -30, Couleur_Team, NORMALSPEED);  // Step 3
+            Robot.setPosition(125, 1826, -30, Couleur_Team);
+            Robot.Robotgoto(375, 1775, -150, Couleur_Team, NORMALSPEED);  // Step 4 - POI startYellow
+            Robot.setPosition(375, 1775, -150, Couleur_Team);
+			
+			
+			 Robot.Robotgoto(417, 1222, -150, Couleur_Team, NORMALSPEED);  // Step 5
+            Robot.Robotgoto(350, 1220, -150, Couleur_Team, NORMALSPEED);  // Step 6
+            Prise_Caise(2);
+            Robot.Robotgoto(350, 1220, 0, Couleur_Team, NORMALSPEED);  // Step 6
+
+            Robot.Robotgoto(1100, 1025, 0, Couleur_Team, NORMALSPEED);  // Step 7 - POI stockYellow_04
+            Robot.Robotgoto(1100, 750, 0, Couleur_Team, NORMALSPEED);  // Step 7 - POI stockYellow_04
+            Prise_Caise(3);
+            Robot.Robotgoto(1000, 546, -120, Couleur_Team, NORMALSPEED);  // Step 8
+            Robot.Robotgoto(1000, 325, -120, Couleur_Team, NORMALSPEED);  // Step 9 - POI stockYellow_03
+            Prise_Caise(1);
+            Robot.Robotgoto(650, 350, -120, Couleur_Team, NORMALSPEED);  // Step 10
+            DeposeCaise1(1);
+            Robot.Robotgoto(650, 500, -120, Couleur_Team, NORMALSPEED);  // Step 11
+            DeposeCaise2(1);
+            Robot.Robotgoto(650, 350, -120, Couleur_Team, NORMALSPEED);  // Step 12
+            Robot.Robotgoto(320, 800, 90, Couleur_Team, NORMALSPEED);  // Step 13
+            DeposeCaise1(3);
+            Robot.Robotgoto(500, 800, 90, Couleur_Team, NORMALSPEED);  // Step 14
+            DeposeCaise2(3);
+            Robot.Robotgoto(300, 800, 90, Couleur_Team, NORMALSPEED);  // Step 15
+            Robot.Robotgoto(689, 795, 30, Couleur_Team, NORMALSPEED);  // Step 16
+            DeposeCaise1(1);
+            Robot.Robotgoto(601, 795, 30, Couleur_Team, NORMALSPEED);  // Step 17
+            DeposeCaise2(1);
+            Robot.Robotgoto(697, 795, 30, Couleur_Team, NORMALSPEED);  // Step 18
+            Robot.Robotgoto(461, 802, -150, Couleur_Team, NORMALSPEED);  // Step 19
+            Robot.Robotgoto(400, 1775, -150, Couleur_Team, NORMALSPEED);  // Step 20 - POI startYellow

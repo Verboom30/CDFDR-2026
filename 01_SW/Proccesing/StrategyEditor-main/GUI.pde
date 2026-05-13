@@ -93,47 +93,52 @@ public class StrategyEditorGUI extends PApplet {
       .setPosition(20, 280)
       .setSize(260, 30);
 
+    cp5.addButton("addPointAfterSelected")
+      .setLabel("Add point after selected")
+      .setPosition(20, 320)
+      .setSize(260, 30);
+
     cp5.addButton("saveStrategy")
       .setLabel("Save strategy")
-      .setPosition(20, 340)
+      .setPosition(20, 380)
       .setSize(120, 30);
 
     cp5.addButton("loadStrategy")
       .setLabel("Load strategy")
-      .setPosition(160, 340)
+      .setPosition(160, 380)
       .setSize(120, 30);
 
     cp5.addButton("resetStrategy")
       .setLabel("Reset strategy")
-      .setPosition(20, 390)
+      .setPosition(20, 430)
       .setSize(120, 30);
 
     cp5.addButton("reloadTempStrategy")
       .setLabel("Reload temp strategy")
-      .setPosition(20, 430)
+      .setPosition(20, 470)
       .setSize(260, 30);
 
     cp5.addButton("startSimulation")
       .setLabel("Start simulation")
-      .setPosition(20, 500)
+      .setPosition(20, 540)
       .setSize(120, 30);
 
     toggleDifferentialRobot = cp5.addToggle("differentialRobotMode")
-      .setPosition(160, 500)
+      .setPosition(160, 540)
       .setSize(20, 20)
       .setValue(false)
       .setLabel("Robot différentiel");
     toggleDifferentialRobot.getCaptionLabel().setColor(color(0, 102, 153));
 
     togglePAMI = cp5.addToggle("usePAMI")
-      .setPosition(160, 540)
+      .setPosition(160, 580)
       .setSize(20, 20)
       .setValue(false)
       .setLabel("PAMI");
     togglePAMI.getCaptionLabel().setColor(color(0, 102, 153));
 
     toggleShowOverlay = cp5.addToggle("showOverlay")
-      .setPosition(20, 590)
+      .setPosition(20, 630)
       .setSize(20, 20)
       .setValue(false)
       .setLabel("Show table overlay");
@@ -243,61 +248,17 @@ public class StrategyEditorGUI extends PApplet {
     savePointsToFile("strategy_temp.json");
     selectOutput("Save strategy to...", "saveStrategyToFile");
   }
-  
-  public void saveStrategyAsRobotCode(String path) {
 
-  StringBuilder code = new StringBuilder();
+  public void saveStrategyToFile(File selection) {
+    if (selection == null) return;
 
-  if (StrategyEditor.points.size() == 0) return;
-
-  // Premier point = setPosition
-  StrategyPoint first = StrategyEditor.points.get(0);
-
-  code.append(
-    "Robot.setPosition("
-    + int(first.x_mm) + ", "
-    + int(first.y_mm) + ", "
-    + int(first.angleDeg) + ", Couleur_Team);\n"
-  );
-
-  // Tous les points = Robotgoto
-  for (int i = 0; i < StrategyEditor.points.size(); i++) {
-
-    StrategyPoint p = StrategyEditor.points.get(i);
-
-    code.append(
-      "Robot.Robotgoto("
-      + int(p.x_mm) + ", "
-      + int(p.y_mm) + ", "
-      + int(p.angleDeg) + ", "
-      + "Couleur_Team, NORMALSPEED);"
-    );
-
-    // commentaire optionnel
-    code.append("  // Step " + (i + 1));
-
-    if (p.poiName != null) {
-      code.append(" - POI " + p.poiName);
+    String path = selection.getAbsolutePath();
+    if (!path.toLowerCase().endsWith(".json")) {
+      path += ".json";
     }
 
-    code.append("\n");
+    savePointsToFile(path);
   }
-
-  saveStrings(path, split(code.toString(), '\n'));
-}
-
-public void saveStrategyToFile(File selection) {
-  if (selection == null) return;
-
-  String path = selection.getAbsolutePath();
-
-  if (!path.toLowerCase().endsWith(".txt")) {
-    path += ".txt";
-  }
-
-  saveStrategyAsRobotCode(path);
-}
-
 
   public void savePointsToFile(String path) {
     JSONObject data = exportPointsToJSON();
@@ -340,6 +301,8 @@ public void saveStrategyToFile(File selection) {
     File f = new File(mainApp.getDataPath("strategy_temp.json"));
     loadStrategyFromFile(f);
   }
+
+
 public void loadStrategyFromJSON(File selection) {
   JSONObject data = loadJSONObject(selection.getAbsolutePath());
   JSONArray list = data.getJSONArray("strategy");
@@ -368,9 +331,21 @@ public void loadStrategyFromJSON(File selection) {
 
   mainApp.renumerotePoints();
 }
+ public void loadStrategyFromFile(File selection) {
+  if (selection == null || !selection.exists()) return;
 
-public void loadStrategyFromRobotCode(File selection) {
+  String path = selection.getAbsolutePath().toLowerCase();
+
+  if (path.endsWith(".json")) {
+    loadStrategyFromJSON(selection);
+  } else {
+    loadStrategyFromRobotCode(selection);
+  }
+}
+  
+  public void loadStrategyFromRobotCode(File selection) {
   String[] lines = loadStrings(selection.getAbsolutePath());
+  if (lines == null) return;
 
   StrategyEditor.points.clear();
 
@@ -380,33 +355,27 @@ public void loadStrategyFromRobotCode(File selection) {
     line = trim(line);
 
     if (line.length() == 0) continue;
+    if (!line.contains("Robot.Robotgoto")) continue;
 
-    // On ignore setPosition pour ne pas créer un doublon
-    if (line.startsWith("Robot.setPosition")) {
-      continue;
-    }
+    int start = line.indexOf("(");
+    int end = line.indexOf(")");
 
-    if (!line.startsWith("Robot.Robotgoto")) {
-      continue;
-    }
+    if (start == -1 || end == -1) continue;
 
-    // Récupère les 3 premiers nombres : x, y, angle
-    String[] values = match(line,
-      "Robot\\.Robotgoto\\s*\\(\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?)"
-    );
+    String inside = line.substring(start + 1, end);
+    String[] args = split(inside, ",");
 
-    if (values == null) continue;
+    if (args.length < 3) continue;
 
-    float x = Float.parseFloat(values[1]);
-    float y = Float.parseFloat(values[2]);
-    float angle = Float.parseFloat(values[3]);
+    float x = Float.parseFloat(trim(args[0]));
+    float y = Float.parseFloat(trim(args[1]));
+    float angle = Float.parseFloat(trim(args[2]));
 
     StrategyPoint p = new StrategyPoint(id, x, y);
     p.angleDeg = normalizeAngle180(angle);
 
-    // Récupère le POI depuis le commentaire : // Step 1 - POI startYellow
     String[] poiMatch = match(line, "POI\\s+([A-Za-z0-9_]+)");
-    if (poiMatch != null) {
+    if (poiMatch != null && poiMatch.length > 1) {
       p.poiName = poiMatch[1];
     }
 
@@ -419,17 +388,8 @@ public void loadStrategyFromRobotCode(File selection) {
   selected = null;
   StrategyEditor.selectedPoint = null;
   setSelectedPoint(null);
-}
-public void loadStrategyFromFile(File selection) {
-  if (selection == null || !selection.exists()) return;
 
-  String path = selection.getAbsolutePath();
-
-  if (path.toLowerCase().endsWith(".json")) {
-    loadStrategyFromJSON(selection);
-  } else {
-    loadStrategyFromRobotCode(selection);
-  }
+  println("Strategy loaded TXT : " + StrategyEditor.points.size() + " points");
 }
 
   public void resetStrategy() {
@@ -446,6 +406,22 @@ public void loadStrategyFromFile(File selection) {
       selected = null;
       StrategyEditor.selectedPoint = null;
       setSelectedPoint(null);
+    }
+  }
+
+
+  public void addPointAfterSelected() {
+    if (selected == null) {
+      println("[GUI] Select a point first.");
+      return;
+    }
+
+    StrategyPoint created = mainApp.insertPointAfter(selected);
+
+    if (created != null) {
+      selected = created;
+      StrategyEditor.selectedPoint = created;
+      setSelectedPoint(created);
     }
   }
 
