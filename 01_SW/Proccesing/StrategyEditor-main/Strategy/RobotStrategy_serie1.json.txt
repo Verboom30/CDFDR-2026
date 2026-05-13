@@ -8,7 +8,7 @@
             Robot.setPosition(375, 1775, -150, Couleur_Team);
 			
 			
-			 Robot.Robotgoto(417, 1222, -150, Couleur_Team, NORMALSPEED);  // Step 5
+			Robot.Robotgoto(417, 1222, -150, Couleur_Team, NORMALSPEED);  // Step 5
             Robot.Robotgoto(350, 1220, -150, Couleur_Team, NORMALSPEED);  // Step 6
             Prise_Caise(2);
             Robot.Robotgoto(350, 1220, 0, Couleur_Team, NORMALSPEED);  // Step 6

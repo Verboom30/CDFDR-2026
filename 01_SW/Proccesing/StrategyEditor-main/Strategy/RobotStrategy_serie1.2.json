@@ -9,41 +9,41 @@
     "x_mm": 350,
     "angleDeg": -150,
     "id": 1,
-    "y_mm": 1215
+    "y_mm": 1220
   },
   {
     "x_mm": 350,
     "angleDeg": 0,
     "id": 2,
-    "y_mm": 1215
+    "y_mm": 1220
   },
   {
-    "x_mm": 1120,
+    "x_mm": 1150,
     "angleDeg": 0,
     "id": 3,
     "y_mm": 1050
   },
   {
-    "x_mm": 1120,
+    "x_mm": 1150,
     "angleDeg": 0,
     "id": 4,
     "poi": "stockYellow_04",
     "y_mm": 900
   },
   {
-    "x_mm": 1080,
+    "x_mm": 1090,
     "angleDeg": -120,
     "id": 5,
-    "y_mm": 700
+    "y_mm": 600
   },
   {
-    "x_mm": 1080,
+    "x_mm": 1090,
     "angleDeg": -120,
     "id": 6,
     "y_mm": 340
   },
   {
-    "x_mm": 680,
+    "x_mm": 700,
     "angleDeg": -120,
     "id": 7,
     "y_mm": 300
@@ -64,37 +64,37 @@
     "x_mm": 320,
     "angleDeg": 90,
     "id": 10,
-    "y_mm": 830
+    "y_mm": 800
   },
   {
     "x_mm": 550,
     "angleDeg": 90,
     "id": 11,
-    "y_mm": 830
+    "y_mm": 800
   },
   {
-    "x_mm": 370,
+    "x_mm": 350,
     "angleDeg": 90,
     "id": 12,
-    "y_mm": 830
+    "y_mm": 800
   },
   {
-    "x_mm": 660,
+    "x_mm": 689,
     "angleDeg": 30,
     "id": 13,
-    "y_mm": 830
+    "y_mm": 795
   },
   {
-    "x_mm": 500,
+    "x_mm": 550,
     "angleDeg": 30,
     "id": 14,
-    "y_mm": 830
+    "y_mm": 795
   },
   {
-    "x_mm": 580,
+    "x_mm": 650,
     "angleDeg": 30,
     "id": 15,
-    "y_mm": 830
+    "y_mm": 795
   },
   {
     "x_mm": 352,
@@ -103,28 +103,10 @@
     "y_mm": 1090
   },
   {
-    "x_mm": 483,
+    "x_mm": 400,
     "angleDeg": -150,
     "id": 17,
-    "y_mm": 1050
-  },
-  {
-    "x_mm": 987,
-    "angleDeg": -60,
-    "id": 18,
-    "y_mm": 1380
-  },
-  {
-    "x_mm": 395,
-    "angleDeg": -60,
-    "id": 19,
-    "y_mm": 1364
-  },
-  {
-    "x_mm": 300,
-    "angleDeg": -60,
-    "id": 20,
     "poi": "startYellow",
-    "y_mm": 1820
+    "y_mm": 1775
   }
 ]}
