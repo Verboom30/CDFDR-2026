@@ -243,17 +243,61 @@ public class StrategyEditorGUI extends PApplet {
     savePointsToFile("strategy_temp.json");
     selectOutput("Save strategy to...", "saveStrategyToFile");
   }
+  
+  public void saveStrategyAsRobotCode(String path) {
 
-  public void saveStrategyToFile(File selection) {
-    if (selection == null) return;
+  StringBuilder code = new StringBuilder();
 
-    String path = selection.getAbsolutePath();
-    if (!path.toLowerCase().endsWith(".json")) {
-      path += ".json";
+  if (StrategyEditor.points.size() == 0) return;
+
+  // Premier point = setPosition
+  StrategyPoint first = StrategyEditor.points.get(0);
+
+  code.append(
+    "Robot.setPosition("
+    + int(first.x_mm) + ", "
+    + int(first.y_mm) + ", "
+    + int(first.angleDeg) + ", Couleur_Team);\n"
+  );
+
+  // Tous les points = Robotgoto
+  for (int i = 0; i < StrategyEditor.points.size(); i++) {
+
+    StrategyPoint p = StrategyEditor.points.get(i);
+
+    code.append(
+      "Robot.Robotgoto("
+      + int(p.x_mm) + ", "
+      + int(p.y_mm) + ", "
+      + int(p.angleDeg) + ", "
+      + "Couleur_Team, NORMALSPEED);"
+    );
+
+    // commentaire optionnel
+    code.append("  // Step " + (i + 1));
+
+    if (p.poiName != null) {
+      code.append(" - POI " + p.poiName);
     }
 
-    savePointsToFile(path);
+    code.append("\n");
   }
+
+  saveStrings(path, split(code.toString(), '\n'));
+}
+
+public void saveStrategyToFile(File selection) {
+  if (selection == null) return;
+
+  String path = selection.getAbsolutePath();
+
+  if (!path.toLowerCase().endsWith(".txt")) {
+    path += ".txt";
+  }
+
+  saveStrategyAsRobotCode(path);
+}
+
 
   public void savePointsToFile(String path) {
     JSONObject data = exportPointsToJSON();
@@ -296,37 +340,97 @@ public class StrategyEditorGUI extends PApplet {
     File f = new File(mainApp.getDataPath("strategy_temp.json"));
     loadStrategyFromFile(f);
   }
+public void loadStrategyFromJSON(File selection) {
+  JSONObject data = loadJSONObject(selection.getAbsolutePath());
+  JSONArray list = data.getJSONArray("strategy");
 
-  public void loadStrategyFromFile(File selection) {
-    if (selection == null || !selection.exists()) return;
+  StrategyEditor.points.clear();
 
-    JSONObject data = loadJSONObject(selection.getAbsolutePath());
-    JSONArray list = data.getJSONArray("strategy");
+  for (int i = 0; i < list.size(); i++) {
+    JSONObject entry = list.getJSONObject(i);
 
-    StrategyEditor.points.clear();
+    StrategyPoint p = new StrategyPoint(
+      entry.getInt("id"),
+      entry.getFloat("x_mm"),
+      entry.getFloat("y_mm")
+    );
 
-    for (int i = 0; i < list.size(); i++) {
-      JSONObject entry = list.getJSONObject(i);
-
-      StrategyPoint p = new StrategyPoint(
-        entry.getInt("id"),
-        entry.getFloat("x_mm"),
-        entry.getFloat("y_mm")
-      );
-
-      if (entry.hasKey("poi")) {
-        p.poiName = entry.getString("poi");
-      }
-
-      if (entry.hasKey("angleDeg")) {
-        p.angleDeg = normalizeAngle180(entry.getFloat("angleDeg"));
-      }
-
-      StrategyEditor.points.add(p);
+    if (entry.hasKey("poi")) {
+      p.poiName = entry.getString("poi");
     }
 
-    mainApp.renumerotePoints();
+    if (entry.hasKey("angleDeg")) {
+      p.angleDeg = normalizeAngle180(entry.getFloat("angleDeg"));
+    }
+
+    StrategyEditor.points.add(p);
   }
+
+  mainApp.renumerotePoints();
+}
+
+public void loadStrategyFromRobotCode(File selection) {
+  String[] lines = loadStrings(selection.getAbsolutePath());
+
+  StrategyEditor.points.clear();
+
+  int id = 0;
+
+  for (String line : lines) {
+    line = trim(line);
+
+    if (line.length() == 0) continue;
+
+    // On ignore setPosition pour ne pas créer un doublon
+    if (line.startsWith("Robot.setPosition")) {
+      continue;
+    }
+
+    if (!line.startsWith("Robot.Robotgoto")) {
+      continue;
+    }
+
+    // Récupère les 3 premiers nombres : x, y, angle
+    String[] values = match(line,
+      "Robot\\.Robotgoto\\s*\\(\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?)"
+    );
+
+    if (values == null) continue;
+
+    float x = Float.parseFloat(values[1]);
+    float y = Float.parseFloat(values[2]);
+    float angle = Float.parseFloat(values[3]);
+
+    StrategyPoint p = new StrategyPoint(id, x, y);
+    p.angleDeg = normalizeAngle180(angle);
+
+    // Récupère le POI depuis le commentaire : // Step 1 - POI startYellow
+    String[] poiMatch = match(line, "POI\\s+([A-Za-z0-9_]+)");
+    if (poiMatch != null) {
+      p.poiName = poiMatch[1];
+    }
+
+    StrategyEditor.points.add(p);
+    id++;
+  }
+
+  mainApp.renumerotePoints();
+
+  selected = null;
+  StrategyEditor.selectedPoint = null;
+  setSelectedPoint(null);
+}
+public void loadStrategyFromFile(File selection) {
+  if (selection == null || !selection.exists()) return;
+
+  String path = selection.getAbsolutePath();
+
+  if (path.toLowerCase().endsWith(".json")) {
+    loadStrategyFromJSON(selection);
+  } else {
+    loadStrategyFromRobotCode(selection);
+  }
+}
 
   public void resetStrategy() {
     int confirm = javax.swing.JOptionPane.showConfirmDialog(

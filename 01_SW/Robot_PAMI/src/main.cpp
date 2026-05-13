@@ -14,8 +14,8 @@
 #define NORMALSPEED 1.0f
 #define SLOWSPEED   0.4f
 #define PAMI_1
-#define STARTMATCH 2s
-#define ENDMATCH 15s
+#define STARTMATCH 85s
+#define ENDMATCH 100s
 
 //*****************************************************************************
 //                                 UART_TMC
@@ -243,13 +243,13 @@ void servoFinDeMatch()
     while (1)
     {
         #ifndef PAMI_3 
-            Servo1.pulsewidth_us(theta2pluse(140));
+            Servo1.pulsewidth_us(theta2pluse(60));
             ThisThread::sleep_for(400ms);
             Servo1.pulsewidth_us(theta2pluse(15));
             ThisThread::sleep_for(800ms);
         #endif
         #ifdef PAMI_3 
-            Servo1.pulsewidth_us(theta2pluse(140));
+            Servo1.pulsewidth_us(theta2pluse(60));
             ThisThread::sleep_for(400ms);
             Servo1.pulsewidth_us(theta2pluse(5));
             ThisThread::sleep_for(800ms);

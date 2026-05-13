@@ -1,39 +1,89 @@
 {"strategy": [
   {
     "x_mm": 375,
-    "angleDeg": 0,
+    "angleDeg": -30,
     "id": 0,
     "poi": "startYellow",
     "y_mm": 1775
   },
   {
-    "x_mm": 458,
-    "angleDeg": -150,
+    "x_mm": 135,
+    "angleDeg": -30,
     "id": 1,
-    "y_mm": 1193
+    "poi": "startYellow",
+    "y_mm": 1775
   },
   {
-    "x_mm": 338,
-    "angleDeg": -150,
+    "x_mm": 135,
+    "angleDeg": -30,
     "id": 2,
-    "y_mm": 1193
+    "y_mm": 1820
   },
   {
-    "x_mm": 277,
-    "angleDeg": -150,
+    "x_mm": 125,
+    "angleDeg": -30,
     "id": 3,
-    "y_mm": 1193
+    "y_mm": 1820
   },
   {
-    "x_mm": 354,
-    "angleDeg": -150,
+    "x_mm": 375,
+    "angleDeg": 180,
     "id": 4,
+    "poi": "startYellow",
+    "y_mm": 1775
+  },
+  {
+    "x_mm": 375,
+    "angleDeg": 180,
+    "id": 5,
+    "y_mm": 1429
+  },
+  {
+    "x_mm": 610,
+    "angleDeg": -150,
+    "id": 6,
+    "y_mm": 1200
+  },
+  {
+    "x_mm": 350,
+    "angleDeg": -150,
+    "id": 7,
+    "poi": "stockYellow_01",
+    "y_mm": 1220
+  },
+  {
+    "x_mm": 500,
+    "angleDeg": -150,
+    "id": 8,
+    "poi": "stockYellow_01",
+    "y_mm": 1220
+  },
+  {
+    "x_mm": 350,
+    "angleDeg": -150,
+    "id": 9,
+    "poi": "stockYellow_01",
     "y_mm": 800
   },
   {
-    "x_mm": 189,
-    "angleDeg": 0,
-    "id": 5,
-    "y_mm": 797
+    "x_mm": 500,
+    "angleDeg": -150,
+    "id": 10,
+    "poi": "stockYellow_01",
+    "y_mm": 800
+  },
+  {
+    "x_mm": 350,
+    "angleDeg": -150,
+    "id": 11,
+    "poi": "stockYellow_01",
+    "y_mm": 800
+  },
+  {
+    "x_mm": 500,
+    "angleDeg": -150,
+    "id": 12,
+    "poi": "stockYellow_01",
+    "y_mm": 800
   }
 ]}

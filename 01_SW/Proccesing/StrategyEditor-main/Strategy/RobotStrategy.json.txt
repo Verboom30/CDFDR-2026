@@ -1,0 +1,21 @@
+				Robot.setPosition(375, 1775, 180, Couleur_Team);
+                Robot.Robotgoto(375, 1775, -30, Couleur_Team, NORMALSPEED);  // Step 1 - POI startYellow
+                Robot.Robotgoto(135, 1775, -30, Couleur_Team, NORMALSPEED);  // Step 1 - POI startYellow
+                Robot.Robotgoto(135, 1820, -30, Couleur_Team, NORMALSPEED);  // Step 2
+                Robot.Robotgoto(125, 1820, -30, Couleur_Team, NORMALSPEED);  // Step 3
+                Robot.setPosition(125, 1826, -30, Couleur_Team);
+                Robot.Robotgoto(375, 1775, 180, Couleur_Team, NORMALSPEED);  // Step 4 - POI startYellow
+                Robot.setPosition(375, 1775, 180, Couleur_Team);
+				
+				Robot.Robotgoto(375, 1429, 180, Couleur_Team, NORMALSPEED);  // Step 1
+                Robot.Robotgoto(610, 1200, -150, Couleur_Team, NORMALSPEED);  // Step 2
+                Robot.Robotgoto(350, 1220, -150, Couleur_Team, NORMALSPEED);  // Step 3 - POI stockYellow_01
+                //Prise_Caise(2);
+                ThisThread::sleep_for(500ms);
+                Robot.Robotgoto(500, 1220, -150, Couleur_Team, NORMALSPEED);  // Step 3 - POI stockYellow_01
+                Robot.Robotgoto(350, 800, -150, Couleur_Team, NORMALSPEED);  // Step 3 - POI stockYellow_01
+                //DeposeCaise1(2);
+                Robot.Robotgoto(500, 800, -150, Couleur_Team, NORMALSPEED);  // Step 3 - POI stockYellow_01
+                //DeposeCaise2(2);
+                Robot.Robotgoto(350, 800, -150, Couleur_Team, NORMALSPEED);  // Step 3 - POI stockYellow_01
+                Robot.Robotgoto(500, 800, -150, Couleur_Team, NORMALSPEED);  // Step 3 - POI stockYellow_01

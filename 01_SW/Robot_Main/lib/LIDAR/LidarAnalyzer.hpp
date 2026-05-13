@@ -27,7 +27,7 @@ private:
 
     bool stop_;
     int stableStopCounter_;
-    static constexpr int STOP_ON_THRESHOLD  = 1;
+    static constexpr int STOP_ON_THRESHOLD  = 5;
     static constexpr int STOP_OFF_THRESHOLD = 20;
 
     int NbDetecLidarPack;

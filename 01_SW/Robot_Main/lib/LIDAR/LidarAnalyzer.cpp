@@ -2,11 +2,11 @@
 #include <cmath>
 
 #define LIDAR_DIS_MIN        200.0f
-#define LIDAR_DIS_MAX        800.0f
+#define LIDAR_DIS_MAX        500.0f
 #define LIDAR_ANGLE_MARGIN   60.0f
 #define NB_LIDAR_PACK_READ   (LIDAR_ANGLE_MARGIN * 1)
-#define LIDAR_PC_ON          5.0f
-
+#define LIDAR_PC_ON          10.0f
+// Hacked by polyedre again
 
 LidarAnalyzer::LidarAnalyzer(Lidar* lidar, Holonome* robot, DigitalOut* status_led)
     : lidar_(lidar), robot_(robot), led_(status_led), stop_(false),

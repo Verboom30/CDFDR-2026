@@ -4,7 +4,7 @@ public static int currentSegment = 0;
 public static float t = 0.0;
 public static boolean isSimulating = false;
 
-public static float robotSpeed_mm_per_sec = 600.0;
+public static float robotSpeed_mm_per_sec = 300.0;
 public static float frameRateSim = 60.0;
 
 // angle robot en degrés robot : 0 haut, 90 droite, 180 bas, -90 gauche

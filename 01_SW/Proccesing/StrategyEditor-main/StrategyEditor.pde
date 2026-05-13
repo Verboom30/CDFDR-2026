@@ -11,9 +11,9 @@ public static boolean differentialRobotMode = false;
 // corrige uniquement l'orientation du PNG
 public static float imageHeadingOffsetDeg = 90;
 
-public static float robotWidth_mm = 287;
-public static float robotHeight_mm = 284;
-public static float robotHitbox_mm = 400;
+public static float robotWidth_mm = 390;
+public static float robotHeight_mm =390;
+public static float robotHitbox_mm = 450;
 
 public static float pamiWidth_mm = 120;
 public static float pamiHeight_mm = 220;
@@ -22,7 +22,7 @@ public static float pamiHitbox_mm = 220;
 int nextPointId = 0;
 public static ArrayList<StrategyPoint> points = new ArrayList<StrategyPoint>();
 
-public static float mmToPx = 0.8;
+public static float mmToPx = 0.4;
 
 public static final int TERRAIN_W_MM = 3000;
 public static final int TERRAIN_H_MM = 2000;
