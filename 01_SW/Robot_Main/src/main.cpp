@@ -402,40 +402,38 @@ void Prise_Caise(uint8_t arm_id)
         default:
             return;
     }
-
+    servo->setServoAngle(pince1,    40); 
+    servo->setServoAngle(pince2,    40); 
+    servo->setServoAngle(pince3,    40);
+    servo->setServoAngle(pince4,    40);
     servo->setServoAngle(bras, 70);
     servo->setServoAngle(pince_top, 90);
     servo->setServoAngle(pince_g,   80); 
     servo->setServoAngle(pince_d,   80); 
-    servo->setServoAngle(pince1,    60); 
-    servo->setServoAngle(pince2,    60); 
-    servo->setServoAngle(pince3,    60);
-    servo->setServoAngle(pince4,    60);
     ThisThread::sleep_for(500ms);
-    servo->setServoAngle(bras, 170);
+    servo->setServoAngle(bras, 180);
     ThisThread::sleep_for(750ms);
+    servo->setServoAngle(pince_g,   40); 
+    servo->setServoAngle(pince_d,   40); 
+    ThisThread::sleep_for(250ms);
+    servo->setServoAngle(pince_g,   50); 
+    servo->setServoAngle(pince_d,   50);
+    ThisThread::sleep_for(500ms);
+    servo->setServoAngle(pince_top, 15);
+    ThisThread::sleep_for(500ms);
     servo->setServoAngle(pince1,    90); 
     servo->setServoAngle(pince2,    90); 
     servo->setServoAngle(pince3,    90);
     servo->setServoAngle(pince4,    90);
     ThisThread::sleep_for(500ms);
-    servo->setServoAngle(pince_g,   40); 
-    servo->setServoAngle(pince_d,   40); 
-    ThisThread::sleep_for(250ms);
-    servo->setServoAngle(pince_g,   50); 
-    servo->setServoAngle(pince_d,   50); 
-    ThisThread::sleep_for(250ms);
-    servo->setServoAngle(bras, 180);
-    servo->setServoAngle(pince_top, 15);
-    ThisThread::sleep_for(500ms);
-    servo->setServoAngle(pince_g,   35); 
-    servo->setServoAngle(pince_d,   35); 
+    servo->setServoAngle(pince_g,   45); 
+    servo->setServoAngle(pince_d,   45); 
     ThisThread::sleep_for(500ms);
     servo->setServoAngle(bras, 7);
-    ThisThread::sleep_for(500ms);
+    ThisThread::sleep_for(750ms);
     servo->setServoAngle(pince_top, 20);
     servo->setServoAngle(pince_g,   50); 
-    servo->setServoAngle(pince_d,   50); 
+    servo->setServoAngle(pince_d,   50);
     ThisThread::sleep_for(250ms);
 }
 void configureCard(ServoPCA9685& servo)
@@ -580,66 +578,67 @@ void main_thread()
             break;
 
         case GAME:
-// Total points: 21
-        Robot.Robotgoto(417, 1222, -150, Couleur_Team, NORMALSPEED);  // Step 5
-        Robot.Robotgoto(350, 1220, -150, Couleur_Team, NORMALSPEED);  // Step 1
+        
+        Robot.Robotgoto(417, 1200, -150, Couleur_Team, NORMALSPEED);
+        Robot.Robotgoto(350, 1200, -150, Couleur_Team, NORMALSPEED);  // Step 1
         if(Couleur_Team ==YELLOW){
              Prise_Caise(2);
         }else{
              Prise_Caise(1);
         }
-        Robot.Robotgoto(350, 1215, 0, Couleur_Team, NORMALSPEED);  // Step 2
-        Robot.Robotgoto(1120, 1050, 0, Couleur_Team, NORMALSPEED);  // Step 3
-        Robot.Robotgoto(1145, 950, 0, Couleur_Team, NORMALSPEED);  // Step 4 - POI stockYellow_04
+        Robot.Robotgoto(350, 1200, 0, Couleur_Team, NORMALSPEED);  // Step 2
+        Robot.Robotgoto(1150, 1150, 0, Couleur_Team, NORMALSPEED);  // Step 3
+        Robot.Robotgoto(1150, 950, 0, Couleur_Team, NORMALSPEED);  // Step 4
         Prise_Caise(3);
-        Robot.Robotgoto(1080, 700, -120, Couleur_Team, NORMALSPEED);  // Step 5
-        Robot.Robotgoto(1091, 364, -120, Couleur_Team, NORMALSPEED);  // Step 6
+        Robot.Robotgoto(1150, 700, -120, Couleur_Team, NORMALSPEED);  // Step 5
+        Robot.Robotgoto(1100, 532, -120, Couleur_Team, NORMALSPEED);  // Step 6
+        Robot.Robotgoto(1100, 355, -120, Couleur_Team, NORMALSPEED);  // Step 7
         if(Couleur_Team ==YELLOW){
              Prise_Caise(1);
         }else{
              Prise_Caise(2);
         }
-        Robot.Robotgoto(680, 300, -120, Couleur_Team, NORMALSPEED);  // Step 7
-         if(Couleur_Team ==YELLOW){
+        Robot.Robotgoto(1400, 315, -120, Couleur_Team, NORMALSPEED);  // Step 8
+        Robot.Robotgoto(1400, 138, -120, Couleur_Team, NORMALSPEED);  // Step 9
+        Robot.Robotgoto(826, 138, -120, Couleur_Team, NORMALSPEED);  // Step 10
+        Robot.Robotgoto(700, 300, -120, Couleur_Team, NORMALSPEED);  // Step 11
+        if(Couleur_Team ==YELLOW){
              DeposeCaise1(1);
         }else{
              DeposeCaise1(2);
         }
-        Robot.Robotgoto(700, 500, -120, Couleur_Team, NORMALSPEED);  // Step 8
-         if(Couleur_Team ==YELLOW){
+        Robot.Robotgoto(700, 500, -120, Couleur_Team, NORMALSPEED);  // Step 12
+        if(Couleur_Team ==YELLOW){
              DeposeCaise2(1);
         }else{
              DeposeCaise2(2);
         }
-        Robot.Robotgoto(700, 300, -120, Couleur_Team, NORMALSPEED);  // Step 9
-        Robot.Robotgoto(320, 830, 90, Couleur_Team, NORMALSPEED);  // Step 10
+        Robot.Robotgoto(700, 400, -120, Couleur_Team, NORMALSPEED);  // Step 13
+        Robot.Robotgoto(320, 800, 90, Couleur_Team, NORMALSPEED);  // Step 14
         DeposeCaise1(3);
-        Robot.Robotgoto(550, 830, 90, Couleur_Team, NORMALSPEED);  // Step 11
+        Robot.Robotgoto(550, 800, 90, Couleur_Team, NORMALSPEED);  // Step 15
         DeposeCaise2(3);
-        Robot.Robotgoto(370, 830, 90, Couleur_Team, NORMALSPEED);  // Step 12
-        Robot.Robotgoto(660, 830, 30, Couleur_Team, NORMALSPEED);  // Step 13
-         if(Couleur_Team ==YELLOW){
+        Robot.Robotgoto(370, 800, 90, Couleur_Team, NORMALSPEED);  // Step 16
+        Robot.Robotgoto(660, 800, 30, Couleur_Team, NORMALSPEED);  // Step 17
+        if(Couleur_Team ==YELLOW){
              DeposeCaise1(2);
         }else{
              DeposeCaise1(1);
         }
-        Robot.Robotgoto(500, 830, 30, Couleur_Team, NORMALSPEED);  // Step 14
-         if(Couleur_Team ==YELLOW){
+        Robot.Robotgoto(500, 800, 30, Couleur_Team, NORMALSPEED);  // Step 18
+          if(Couleur_Team ==YELLOW){
              DeposeCaise2(2);
         }else{
              DeposeCaise2(1);
         }
-        Robot.Robotgoto(580, 830, 30, Couleur_Team, NORMALSPEED);  // Step 15
-        Robot.Robotgoto(352, 1090, -150, Couleur_Team, NORMALSPEED);  // Step 16
-        Robot.Robotgoto(483, 1050, -150, Couleur_Team, NORMALSPEED);  // Step 16
-        Robot.Robotgoto(987, 1380, -60, Couleur_Team, NORMALSPEED);  // Step 17
+        Robot.Robotgoto(580, 800, 30, Couleur_Team, NORMALSPEED);  // Step 19
+        Robot.Robotgoto(352, 1090, -60, Couleur_Team, NORMALSPEED);  // Step 20
+        Robot.Robotgoto(987, 1380, -60, Couleur_Team, NORMALSPEED);  // Step 21
         while(int(endMatch.remaining_time().count()) / 1000000 > 5);
-        Robot.Robotgoto(395, 1364, -60, Couleur_Team, NORMALSPEED);  // Step 18
-        Robot.Robotgoto(300, 1820, -60, Couleur_Team, NORMALSPEED);  // Step 19 - POI startYellow
+        Robot.Robotgoto(395, 1364, -60, Couleur_Team, NORMALSPEED*4);  // Step 22
+        Robot.Robotgoto(200, 1920, -60, Couleur_Team, NORMALSPEED*4);  // Step 23 - POI startYellow
 
 
-
-            
 
                 FsmState = END;
             break;
@@ -676,7 +675,7 @@ int main()
     // offsets indépendants carte 1
     configureCardOffsets(servoCard1,
         0.0f, -5.0f, 0.0f, 0.0f,
-        0.0f,  0.0f, 0.0f, 12.0f
+        0.0f,  0.0f, 0.0f, 5.0f
     );
 
     // offsets indépendants carte 2

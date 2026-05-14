@@ -1,0 +1,58 @@
+Robot.Robotgoto(417, 1200, -150, Couleur_Team, NORMALSPEED);
+        Robot.Robotgoto(350, 1200, -150, Couleur_Team, NORMALSPEED);  // Step 1
+        if(Couleur_Team ==YELLOW){
+             Prise_Caise(2);
+        }else{
+             Prise_Caise(1);
+        }
+        Robot.Robotgoto(350, 1200, 0, Couleur_Team, NORMALSPEED);  // Step 2
+        Robot.Robotgoto(1150, 1150, 0, Couleur_Team, NORMALSPEED);  // Step 3
+        Robot.Robotgoto(1150, 950, 0, Couleur_Team, NORMALSPEED);  // Step 4
+        Prise_Caise(3);
+        Robot.Robotgoto(1150, 700, -120, Couleur_Team, NORMALSPEED);  // Step 5
+        Robot.Robotgoto(1100, 532, -120, Couleur_Team, NORMALSPEED);  // Step 6
+        Robot.Robotgoto(1100, 355, -120, Couleur_Team, NORMALSPEED);  // Step 7
+        if(Couleur_Team ==YELLOW){
+             Prise_Caise(1);
+        }else{
+             Prise_Caise(2);
+        }
+        Robot.Robotgoto(1400, 315, -120, Couleur_Team, NORMALSPEED);  // Step 8
+        Robot.Robotgoto(1400, 138, -120, Couleur_Team, NORMALSPEED);  // Step 9
+        Robot.Robotgoto(826, 138, -120, Couleur_Team, NORMALSPEED);  // Step 10
+        Robot.Robotgoto(700, 300, -120, Couleur_Team, NORMALSPEED);  // Step 11
+        if(Couleur_Team ==YELLOW){
+             DeposeCaise1(1);
+        }else{
+             DeposeCaise1(2);
+        }
+        Robot.Robotgoto(700, 500, -120, Couleur_Team, NORMALSPEED);  // Step 12
+        if(Couleur_Team ==YELLOW){
+             DeposeCaise2(1);
+        }else{
+             DeposeCaise2(2);
+        }
+        Robot.Robotgoto(700, 400, -120, Couleur_Team, NORMALSPEED);  // Step 13
+        Robot.Robotgoto(320, 800, 90, Couleur_Team, NORMALSPEED);  // Step 14
+        DeposeCaise1(3);
+        Robot.Robotgoto(550, 800, 90, Couleur_Team, NORMALSPEED);  // Step 15
+        DeposeCaise2(3);
+        Robot.Robotgoto(370, 800, 90, Couleur_Team, NORMALSPEED);  // Step 16
+        Robot.Robotgoto(660, 800, 30, Couleur_Team, NORMALSPEED);  // Step 17
+        if(Couleur_Team ==YELLOW){
+             DeposeCaise1(1);
+        }else{
+             DeposeCaise1(2);
+        }
+        Robot.Robotgoto(500, 800, 30, Couleur_Team, NORMALSPEED);  // Step 18
+          if(Couleur_Team ==YELLOW){
+             DeposeCaise2(1);
+        }else{
+             DeposeCaise2(2);
+        }
+        Robot.Robotgoto(580, 800, 30, Couleur_Team, NORMALSPEED);  // Step 19
+        Robot.Robotgoto(352, 1090, -60, Couleur_Team, NORMALSPEED);  // Step 20
+        Robot.Robotgoto(987, 1380, -60, Couleur_Team, NORMALSPEED);  // Step 21
+        while(int(endMatch.remaining_time().count()) / 1000000 > 5);
+        Robot.Robotgoto(395, 1364, -60, Couleur_Team, NORMALSPEED*1.2);  // Step 22
+        Robot.Robotgoto(200, 1920, -60, Couleur_Team, NORMALSPEED*2);  // Step 23 - POI startYellow

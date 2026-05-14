@@ -13,7 +13,7 @@
 
 #define NORMALSPEED 1.0f
 #define SLOWSPEED   0.4f
-#define PAMI_1
+#define PAMI_2
 #define STARTMATCH 85s
 #define ENDMATCH 100s
 

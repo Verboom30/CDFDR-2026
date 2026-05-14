@@ -3,127 +3,145 @@
     "x_mm": 417,
     "angleDeg": -150,
     "id": 0,
-    "y_mm": 1222
+    "y_mm": 1200
   },
   {
     "x_mm": 350,
     "angleDeg": -150,
     "id": 1,
-    "y_mm": 1215
+    "y_mm": 1200
   },
   {
     "x_mm": 350,
     "angleDeg": 0,
     "id": 2,
-    "y_mm": 1215
+    "y_mm": 1200
   },
   {
-    "x_mm": 1120,
+    "x_mm": 1150,
     "angleDeg": 0,
     "id": 3,
-    "y_mm": 1050
+    "y_mm": 1150
   },
   {
-    "x_mm": 1146,
+    "x_mm": 1150,
     "angleDeg": 0,
     "id": 4,
-    "y_mm": 943
+    "y_mm": 950
   },
   {
-    "x_mm": 1080,
+    "x_mm": 1150,
     "angleDeg": -120,
     "id": 5,
     "y_mm": 700
   },
   {
-    "x_mm": 1091,
+    "x_mm": 1100,
     "angleDeg": -120,
     "id": 6,
-    "y_mm": 364
+    "y_mm": 532
   },
   {
-    "x_mm": 680,
+    "x_mm": 1100,
     "angleDeg": -120,
     "id": 7,
+    "y_mm": 355
+  },
+  {
+    "x_mm": 1400,
+    "angleDeg": -120,
+    "id": 8,
+    "y_mm": 315
+  },
+  {
+    "x_mm": 1400,
+    "angleDeg": -120,
+    "id": 9,
+    "y_mm": 138
+  },
+  {
+    "x_mm": 826,
+    "angleDeg": -120,
+    "id": 10,
+    "y_mm": 138
+  },
+  {
+    "x_mm": 700,
+    "angleDeg": -120,
+    "id": 11,
     "y_mm": 300
   },
   {
     "x_mm": 700,
     "angleDeg": -120,
-    "id": 8,
+    "id": 12,
     "y_mm": 500
   },
   {
     "x_mm": 700,
     "angleDeg": -120,
-    "id": 9,
-    "y_mm": 300
+    "id": 13,
+    "y_mm": 400
   },
   {
     "x_mm": 320,
     "angleDeg": 90,
-    "id": 10,
-    "y_mm": 830
+    "id": 14,
+    "y_mm": 800
   },
   {
     "x_mm": 550,
     "angleDeg": 90,
-    "id": 11,
-    "y_mm": 830
+    "id": 15,
+    "y_mm": 800
   },
   {
     "x_mm": 370,
     "angleDeg": 90,
-    "id": 12,
-    "y_mm": 830
+    "id": 16,
+    "y_mm": 800
   },
   {
     "x_mm": 660,
     "angleDeg": 30,
-    "id": 13,
-    "y_mm": 830
+    "id": 17,
+    "y_mm": 800
   },
   {
     "x_mm": 500,
     "angleDeg": 30,
-    "id": 14,
-    "y_mm": 830
+    "id": 18,
+    "y_mm": 800
   },
   {
     "x_mm": 580,
     "angleDeg": 30,
-    "id": 15,
-    "y_mm": 830
+    "id": 19,
+    "y_mm": 800
   },
   {
     "x_mm": 352,
-    "angleDeg": -150,
-    "id": 16,
+    "angleDeg": -60,
+    "id": 20,
     "y_mm": 1090
-  },
-  {
-    "x_mm": 483,
-    "angleDeg": -150,
-    "id": 17,
-    "y_mm": 1050
   },
   {
     "x_mm": 987,
     "angleDeg": -60,
-    "id": 18,
+    "id": 21,
     "y_mm": 1380
   },
   {
     "x_mm": 395,
     "angleDeg": -60,
-    "id": 19,
+    "id": 22,
     "y_mm": 1364
   },
   {
-    "x_mm": 300,
+    "x_mm": 200,
     "angleDeg": -60,
-    "id": 20,
+    "id": 23,
     "poi": "startYellow",
-    "y_mm": 1820
+    "y_mm": 1920
   }
 ]}
