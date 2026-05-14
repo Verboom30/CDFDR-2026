@@ -42,27 +42,43 @@ void drawOverlay(PGraphics pg, float scale) {
   pg.popMatrix();
 
 
-  // Lignes des axes depuis (0,0)
-  pg.stroke(255);
-  pg.strokeWeight(5);
-  pg.line(0, 0, 100, 0);   // Axe X (vers la droite)
-  pg.line(0, 0, 0, 100);   // Axe Y (vers le bas)
+// === Repère en bas à gauche ===
 
-  // Triangles directionnels au bout des lignes
+float originX = 140;
+float originY = pg.height - 140;
 
-  pg.noStroke();
-  pg.fill(255);
+// Lignes des axes
+pg.stroke(255);
+pg.strokeWeight(5);
 
-  // Triangle pour X (à 100, 0) → pointant vers la droite
-  pg.triangle(100, -10, 100, 10, 120, 0);
-  pg.textFont(createFont("Arial-Bold", 14));
-  pg.textAlign(LEFT, CENTER);
-  pg.text("X", 115, 15);
+pg.line(originX, originY, originX + 100, originY);   // Axe X → droite
+pg.line(originX, originY, originX, originY - 100);   // Axe Y → bas
 
-  // Triangle pour Y (à 0, 100) → pointant vers le bas
-  pg.triangle(-10, 100, 10, 100, 0, 120);
-  pg.textAlign(CENTER, TOP);
-  pg.text("Y", 15, 115);
+// Triangles directionnels
+pg.noStroke();
+pg.fill(255);
+
+pg.textFont(createFont("Arial-Bold", 14));
+
+// Triangle X
+pg.triangle(
+  originX + 100, originY - 10,
+  originX + 100, originY + 10,
+  originX + 120, originY
+);
+
+pg.textAlign(LEFT, CENTER);
+pg.text("X", originX + 115, originY + 15);
+
+// Triangle Y
+pg.triangle(
+  originX - 10, originY - 100,
+  originX + 10, originY - 100,
+  originX, originY - 120
+);
+
+pg.textAlign(CENTER, TOP);
+pg.text("Y", originX + 15, originY - 115);
 
 
   drawAngleRosace(pg, scale);
@@ -98,7 +114,7 @@ void drawAngleRosace(PGraphics pg, float scale) {
 
     pg.pushMatrix();
     pg.translate(centerX, centerY);
-    pg.rotate(robotImageToRenderRad(robotAngleDeg)-HALF_PI);
+    pg.rotate(robotImageToRenderRad(robotAngleDeg)+PI);
    
 
     pg.imageMode(CENTER);
