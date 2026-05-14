@@ -582,7 +582,7 @@ void main_thread()
         case GAME:
 // Total points: 21
         Robot.Robotgoto(417, 1222, -150, Couleur_Team, NORMALSPEED);  // Step 5
-        Robot.Robotgoto(350, 1215, -150, Couleur_Team, NORMALSPEED);  // Step 1
+        Robot.Robotgoto(350, 1220, -150, Couleur_Team, NORMALSPEED);  // Step 1
         if(Couleur_Team ==YELLOW){
              Prise_Caise(2);
         }else{
@@ -590,10 +590,10 @@ void main_thread()
         }
         Robot.Robotgoto(350, 1215, 0, Couleur_Team, NORMALSPEED);  // Step 2
         Robot.Robotgoto(1120, 1050, 0, Couleur_Team, NORMALSPEED);  // Step 3
-        Robot.Robotgoto(1120, 900, 0, Couleur_Team, NORMALSPEED);  // Step 4 - POI stockYellow_04
+        Robot.Robotgoto(1145, 950, 0, Couleur_Team, NORMALSPEED);  // Step 4 - POI stockYellow_04
         Prise_Caise(3);
         Robot.Robotgoto(1080, 700, -120, Couleur_Team, NORMALSPEED);  // Step 5
-        Robot.Robotgoto(1080, 340, -120, Couleur_Team, NORMALSPEED);  // Step 6
+        Robot.Robotgoto(1091, 364, -120, Couleur_Team, NORMALSPEED);  // Step 6
         if(Couleur_Team ==YELLOW){
              Prise_Caise(1);
         }else{
@@ -633,6 +633,7 @@ void main_thread()
         Robot.Robotgoto(352, 1090, -150, Couleur_Team, NORMALSPEED);  // Step 16
         Robot.Robotgoto(483, 1050, -150, Couleur_Team, NORMALSPEED);  // Step 16
         Robot.Robotgoto(987, 1380, -60, Couleur_Team, NORMALSPEED);  // Step 17
+        while(int(endMatch.remaining_time().count()) / 1000000 > 5);
         Robot.Robotgoto(395, 1364, -60, Couleur_Team, NORMALSPEED);  // Step 18
         Robot.Robotgoto(300, 1820, -60, Couleur_Team, NORMALSPEED);  // Step 19 - POI startYellow
 
