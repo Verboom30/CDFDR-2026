@@ -32,13 +32,13 @@ void updateSimulation() {
       if (currentSegment < StrategyEditor.points.size() - 1) {
         StrategyPoint p1 = StrategyEditor.points.get(currentSegment);
         StrategyPoint p2 = StrategyEditor.points.get(currentSegment + 1);
-        targetAngle = headingTo(p1.x_mm, p1.y_mm, p2.x_mm, p2.y_mm);
+        targetAngle = headingTo(strategyX(p1), strategyY(p1), strategyX(p2), strategyY(p2));
       } else {
         targetAngle = robotAngleDeg;
       }
     } else {
       StrategyPoint p = StrategyEditor.points.get(currentSegment);
-      targetAngle = p.angleDeg;
+      targetAngle = strategyAngle(p);
     }
 
     robotAngleDeg = approachAngle(robotAngleDeg, targetAngle, rotationSpeedDeg);
@@ -57,7 +57,7 @@ void updateSimulation() {
   StrategyPoint p1 = StrategyEditor.points.get(currentSegment);
   StrategyPoint p2 = StrategyEditor.points.get(currentSegment + 1);
 
-  float dist_mm = dist(p1.x_mm, p1.y_mm, p2.x_mm, p2.y_mm);
+  float dist_mm = dist(strategyX(p1), strategyY(p1), strategyX(p2), strategyY(p2));
   if (dist_mm < 1) {
     currentSegment++;
     return;
@@ -69,8 +69,8 @@ void updateSimulation() {
 
   float tt = easeInOut(t);
 
-  float x = lerp(p1.x_mm, p2.x_mm, tt);
-  float y = lerp(p1.y_mm, p2.y_mm, tt);
+  float x = lerp(strategyX(p1), strategyX(p2), tt);
+  float y = lerp(strategyY(p1), strategyY(p2), tt);
 
   if (robotPos == null) {
     robotPos = new PVector(x, y);
@@ -81,7 +81,7 @@ void updateSimulation() {
   t += deltaT;
 
   if (t >= 1.0) {
-    robotPos.set(p2.x_mm, p2.y_mm);
+    robotPos.set(strategyX(p2), strategyY(p2));
     currentSegment++;
     t = 0.0;
 
@@ -92,13 +92,13 @@ void updateSimulation() {
         if (currentSegment < StrategyEditor.points.size() - 1) {
           StrategyPoint a = StrategyEditor.points.get(currentSegment);
           StrategyPoint b = StrategyEditor.points.get(currentSegment + 1);
-          targetAngle = headingTo(a.x_mm, a.y_mm, b.x_mm, b.y_mm);
+          targetAngle = headingTo(strategyX(a), strategyY(a), strategyX(b), strategyY(b));
         } else {
           targetAngle = robotAngleDeg;
         }
       } else {
         StrategyPoint arrivedPoint = StrategyEditor.points.get(currentSegment);
-        targetAngle = arrivedPoint.angleDeg;
+        targetAngle = strategyAngle(arrivedPoint);
       }
 
       if (abs(shortestAngleDiffDeg(robotAngleDeg, targetAngle)) > angleToleranceDeg) {

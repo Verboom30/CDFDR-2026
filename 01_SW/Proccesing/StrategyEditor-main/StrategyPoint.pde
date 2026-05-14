@@ -17,8 +17,8 @@ class StrategyPoint {
   }
 
   void draw(PGraphics pg, float scale) {
-    float px = x_mm;
-    float py = y_mm;
+    float px = strategyX(this);
+    float py = strategyY(this);
 
     if (this == selectedPoint) {
       drawRobotPreview(pg, px, py);
@@ -66,7 +66,7 @@ class StrategyPoint {
   }
 
   void drawAngleArrow(PGraphics pg, float px, float py) {
-    float a = radians(angleDeg);
+    float a = radians(strategyAngle(this));
     float len = 40.0 / mmToPx;
 
     float x2 = px + sin(a) * len;
@@ -85,7 +85,7 @@ class StrategyPoint {
 
     pg.pushMatrix();
     pg.translate(x2, y2);
-    pg.rotate(robotHeadingToRenderRad(angleDeg));
+    pg.rotate(robotHeadingToRenderRad(strategyAngle(this)));
     pg.noStroke();
     pg.triangle(
       0, 0,
@@ -119,7 +119,7 @@ class StrategyPoint {
     pg.pushStyle();
 
     pg.translate(px, py);
-    pg.rotate(robotImageToRenderRad(angleDeg));
+    pg.rotate(robotImageToRenderRad(strategyAngle(this)));
     pg.imageMode(CENTER);
 
     pg.fill(0, 255, 255, 35);

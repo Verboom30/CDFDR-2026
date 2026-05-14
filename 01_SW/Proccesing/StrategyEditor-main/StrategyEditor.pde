@@ -7,6 +7,7 @@ PImage pamiImg;
 
 public static boolean usePAMI = false;
 public static boolean differentialRobotMode = false;
+public static boolean blueTeamMode = false;
 
 // corrige uniquement l'orientation du PNG
 public static float imageHeadingOffsetDeg = 90;
@@ -135,6 +136,36 @@ float normalizeAngle180(float a) {
 }
 
 // =====================================================
+// TRANSFORMATION EQUIPE
+// Points stockés en coordonnées JAUNE.
+// En mode BLEU : X = 3000 - X, Y = Y, Theta = -Theta.
+// =====================================================
+
+float strategyX(StrategyPoint p) {
+  return blueTeamMode ? TERRAIN_W_MM - p.x_mm : p.x_mm;
+}
+
+float strategyY(StrategyPoint p) {
+  return p.y_mm;
+}
+
+float strategyAngle(StrategyPoint p) {
+  return blueTeamMode ? normalizeAngle180(-p.angleDeg) : p.angleDeg;
+}
+
+float inverseStrategyX(float xMm) {
+  return blueTeamMode ? TERRAIN_W_MM - xMm : xMm;
+}
+
+float inverseStrategyY(float yMm) {
+  return yMm;
+}
+
+float inverseStrategyAngle(float angleDeg) {
+  return blueTeamMode ? normalizeAngle180(-angleDeg) : normalizeAngle180(angleDeg);
+}
+
+// =====================================================
 
 void drawTerrain() {
   terrainView.beginDraw();
@@ -203,8 +234,13 @@ void drawPath() {
     StrategyPoint p1 = points.get(i);
     StrategyPoint p2 = points.get(i + 1);
 
-    terrainView.line(p1.x_mm, p1.y_mm, p2.x_mm, p2.y_mm);
-    drawArrow(terrainView, p1.x_mm, p1.y_mm, p2.x_mm, p2.y_mm);
+    float x1 = strategyX(p1);
+    float y1 = strategyY(p1);
+    float x2 = strategyX(p2);
+    float y2 = strategyY(p2);
+
+    terrainView.line(x1, y1, x2, y2);
+    drawArrow(terrainView, x1, y1, x2, y2);
   }
 }
 
@@ -262,8 +298,10 @@ void mousePressed() {
     } else if (gui == null || gui.isAddPointEnabled()) {
       int insertIndex = getSegmentIndexUnderMouse();
 
-      float x_mm = round(constrain(screenToWorldX(mouseX), 0, TERRAIN_W_MM));
-      float y_mm = round(constrain(screenToWorldY(mouseY), 0, TERRAIN_H_MM));
+      float displayX_mm = round(constrain(screenToWorldX(mouseX), 0, TERRAIN_W_MM));
+      float displayY_mm = round(constrain(screenToWorldY(mouseY), 0, TERRAIN_H_MM));
+      float x_mm = round(constrain(inverseStrategyX(displayX_mm), 0, TERRAIN_W_MM));
+      float y_mm = round(constrain(inverseStrategyY(displayY_mm), 0, TERRAIN_H_MM));
 
       POI snap = getNearbyPOI(x_mm, y_mm, 50);
       if (snap != null) {
@@ -310,17 +348,20 @@ void mouseDragged() {
     float worldMouseX = screenToWorldX(mouseX);
     float worldMouseY = screenToWorldY(mouseY);
 
-    selectedPoint.angleDeg = normalizeAngle180(
-      headingTo(selectedPoint.x_mm, selectedPoint.y_mm, worldMouseX, worldMouseY)
-    );
+    float displayPointX = strategyX(selectedPoint);
+    float displayPointY = strategyY(selectedPoint);
+    float displayAngle = headingTo(displayPointX, displayPointY, worldMouseX, worldMouseY);
+    selectedPoint.angleDeg = inverseStrategyAngle(displayAngle);
 
     if (gui != null) gui.setSelectedPoint(selectedPoint);
     return;
   }
 
   if (isDragging && selectedPoint != null) {
-    float x_mm = round(constrain(screenToWorldX(mouseX), 0, TERRAIN_W_MM));
-    float y_mm = round(constrain(screenToWorldY(mouseY), 0, TERRAIN_H_MM));
+    float displayX_mm = round(constrain(screenToWorldX(mouseX), 0, TERRAIN_W_MM));
+    float displayY_mm = round(constrain(screenToWorldY(mouseY), 0, TERRAIN_H_MM));
+    float x_mm = round(constrain(inverseStrategyX(displayX_mm), 0, TERRAIN_W_MM));
+    float y_mm = round(constrain(inverseStrategyY(displayY_mm), 0, TERRAIN_H_MM));
 
     POI snap = getNearbyPOI(x_mm, y_mm, 50);
     if (snap != null) {
@@ -414,7 +455,7 @@ StrategyPoint getPointUnderMouse() {
   float my = screenToWorldY(mouseY);
 
   for (StrategyPoint p : points) {
-    if (dist(mx, my, p.x_mm, p.y_mm) < 15 / mmToPx) {
+    if (dist(mx, my, strategyX(p), strategyY(p)) < 15 / mmToPx) {
       return p;
     }
   }
@@ -431,7 +472,7 @@ int getSegmentIndexUnderMouse() {
     StrategyPoint p1 = points.get(i);
     StrategyPoint p2 = points.get(i + 1);
 
-    float d = distToSegment(mx, my, p1.x_mm, p1.y_mm, p2.x_mm, p2.y_mm);
+    float d = distToSegment(mx, my, strategyX(p1), strategyY(p1), strategyX(p2), strategyY(p2));
     if (d < threshold / mmToPx) return i;
   }
 

@@ -18,6 +18,7 @@ boolean addPointEnabled = true;
 Toggle toggleShowOverlay;
 Toggle toggleDifferentialRobot;
 Toggle togglePAMI;
+Toggle toggleBlueTeam;
 
 int lastAutoSave = 0;
 int autoSaveInterval = 30 * 1000;
@@ -137,8 +138,15 @@ public class StrategyEditorGUI extends PApplet {
       .setLabel("PAMI");
     togglePAMI.getCaptionLabel().setColor(color(0, 102, 153));
 
+    toggleBlueTeam = cp5.addToggle("blueTeamMode")
+      .setPosition(20, 620)
+      .setSize(20, 20)
+      .setValue(false)
+      .setLabel("Equipe bleue / transformer");
+    toggleBlueTeam.getCaptionLabel().setColor(color(0, 102, 153));
+
     toggleShowOverlay = cp5.addToggle("showOverlay")
-      .setPosition(20, 630)
+      .setPosition(20, 670)
       .setSize(20, 20)
       .setValue(false)
       .setLabel("Show table overlay");
@@ -162,10 +170,11 @@ public class StrategyEditorGUI extends PApplet {
 
     labelInfo.setText(
       "Point P" + selected.id +
-      "\nX: " + nf(selected.x_mm, 0, 0) + " mm" +
-      "\nY: " + nf(selected.y_mm, 0, 0) + " mm" +
+      "\nEquipe: " + (StrategyEditor.blueTeamMode ? "BLEU" : "JAUNE") +
+      "\nX: " + nf(strategyX(selected), 0, 0) + " mm" +
+      "\nY: " + nf(strategyY(selected), 0, 0) + " mm" +
       "\nPOI: " + selected.poiName +
-      "\nAngle: " + nf(selected.angleDeg, 0, 1) + "°"
+      "\nAngle: " + nf(strategyAngle(selected), 0, 1) + "°"
     );
   }
 
@@ -176,9 +185,9 @@ public class StrategyEditorGUI extends PApplet {
       updatingFromGUI = true;
 
       updateLabelInfo();
-      fieldX.setText(nf(selected.x_mm, 0, 0));
-      fieldY.setText(nf(selected.y_mm, 0, 0));
-      fieldAngle.setText(nf(selected.angleDeg, 0, 1));
+      fieldX.setText(nf(strategyX(selected), 0, 0));
+      fieldY.setText(nf(strategyY(selected), 0, 0));
+      fieldAngle.setText(nf(strategyAngle(selected), 0, 1));
 
       updatingFromGUI = false;
     } else {
@@ -207,27 +216,34 @@ public class StrategyEditorGUI extends PApplet {
       return;
     }
 
+    if (e.getName().equals("blueTeamMode")) {
+      StrategyEditor.blueTeamMode = e.getValue() == 1;
+      if (selected != null) setSelectedPoint(selected);
+      if (mainApp.previewWindow != null) mainApp.previewWindow.refreshCode();
+      return;
+    }
+
     if (selected == null) return;
 
     switch(e.getName()) {
 
     case "x_mm":
       try {
-        selected.x_mm = constrain(Float.parseFloat(e.getStringValue()), 0, TERRAIN_W_MM);
+        selected.x_mm = constrain(inverseStrategyX(Float.parseFloat(e.getStringValue())), 0, TERRAIN_W_MM);
       } catch(Exception ex) {
       }
       break;
 
     case "y_mm":
       try {
-        selected.y_mm = constrain(Float.parseFloat(e.getStringValue()), 0, TERRAIN_H_MM);
+        selected.y_mm = constrain(inverseStrategyY(Float.parseFloat(e.getStringValue())), 0, TERRAIN_H_MM);
       } catch(Exception ex) {
       }
       break;
 
     case "angleDeg":
       try {
-        selected.angleDeg = normalizeAngle180(Float.parseFloat(e.getStringValue()));
+        selected.angleDeg = inverseStrategyAngle(Float.parseFloat(e.getStringValue()));
       } catch(Exception ex) {
       }
       break;
@@ -477,16 +493,16 @@ public void loadStrategyFromJSON(File selection) {
     StrategyEditor.rotatingAtPoint = false;
 
     StrategyEditor.robotPos = new PVector(
-      StrategyEditor.points.get(0).x_mm,
-      StrategyEditor.points.get(0).y_mm
+      strategyX(StrategyEditor.points.get(0)),
+      strategyY(StrategyEditor.points.get(0))
     );
 
     if (StrategyEditor.differentialRobotMode) {
       StrategyPoint p0 = StrategyEditor.points.get(0);
       StrategyPoint p1 = StrategyEditor.points.get(1);
-      StrategyEditor.robotAngleDeg = headingTo(p0.x_mm, p0.y_mm, p1.x_mm, p1.y_mm);
+      StrategyEditor.robotAngleDeg = headingTo(strategyX(p0), strategyY(p0), strategyX(p1), strategyY(p1));
     } else {
-      StrategyEditor.robotAngleDeg = StrategyEditor.points.get(0).angleDeg;
+      StrategyEditor.robotAngleDeg = strategyAngle(StrategyEditor.points.get(0));
     }
 
     StrategyEditor.robotAngle = StrategyEditor.robotAngleDeg;
