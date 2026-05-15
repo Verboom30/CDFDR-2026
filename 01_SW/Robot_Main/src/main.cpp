@@ -411,7 +411,7 @@ void Prise_Caise(uint8_t arm_id)
     servo->setServoAngle(pince_g,   80); 
     servo->setServoAngle(pince_d,   80); 
     ThisThread::sleep_for(500ms);
-    servo->setServoAngle(bras, 180);
+    servo->setServoAngle(bras, 170);
     ThisThread::sleep_for(750ms);
     servo->setServoAngle(pince_g,   40); 
     servo->setServoAngle(pince_d,   40); 
@@ -419,15 +419,31 @@ void Prise_Caise(uint8_t arm_id)
     servo->setServoAngle(pince_g,   50); 
     servo->setServoAngle(pince_d,   50);
     ThisThread::sleep_for(500ms);
-    servo->setServoAngle(pince_top, 15);
-    ThisThread::sleep_for(500ms);
+    servo->setServoAngle(pince_top, 25);
     servo->setServoAngle(pince1,    90); 
     servo->setServoAngle(pince2,    90); 
     servo->setServoAngle(pince3,    90);
     servo->setServoAngle(pince4,    90);
     ThisThread::sleep_for(500ms);
-    servo->setServoAngle(pince_g,   45); 
-    servo->setServoAngle(pince_d,   45); 
+    servo->setServoAngle(pince_g,   80); 
+    servo->setServoAngle(pince_d,   80); 
+    ThisThread::sleep_for(500ms);
+    servo->setServoAngle(pince_top, 40);
+    servo->setServoAngle(pince1,    50); 
+    servo->setServoAngle(pince2,    50); 
+    servo->setServoAngle(pince3,    50);
+    servo->setServoAngle(pince4,    50);
+    ThisThread::sleep_for(500ms);
+    servo->setServoAngle(bras, 180);
+    ThisThread::sleep_for(500ms);
+    servo->setServoAngle(pince_top, 25);
+    servo->setServoAngle(pince1,    90); 
+    servo->setServoAngle(pince2,    90); 
+    servo->setServoAngle(pince3,    90);
+    servo->setServoAngle(pince4,    90);
+    ThisThread::sleep_for(500ms);
+    servo->setServoAngle(pince_g,   40); 
+    servo->setServoAngle(pince_d,   40); 
     ThisThread::sleep_for(500ms);
     servo->setServoAngle(bras, 7);
     ThisThread::sleep_for(750ms);
@@ -675,12 +691,12 @@ int main()
     // offsets indépendants carte 1
     configureCardOffsets(servoCard1,
         0.0f, -5.0f, 0.0f, 0.0f,
-        0.0f,  0.0f, 0.0f, 5.0f
+        0.0f,  0.0f, 0.0f, 0.0f
     );
 
     // offsets indépendants carte 2
     configureCardOffsets(servoCard2,
-        0.0f, -5.0f, 0.0f, 0.0f,
+        5.0f, 0.0f, 0.0f, 0.0f,
         0.0f,  0.0f, 0.0f, 0.0f
     );
 
